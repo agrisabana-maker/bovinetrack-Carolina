@@ -1,0 +1,2035 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BovineTrack Pro v2 — SEMEX Carolina</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#2d333b;
+  --border:#30363d;--green:#3fb950;--green2:#238636;
+  --amber:#d29922;--red:#f85149;--blue:#58a6ff;--purple:#bc8cff;
+  --text:#e6edf3;--muted:#7d8590;--r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+.sb{position:fixed;left:0;top:0;bottom:0;width:222px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.sb-logo h1{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--green);}
+.sb-logo p{font-size:.68rem;color:var(--muted);margin-top:2px;}
+.ver{display:inline-block;margin-top:5px;padding:2px 7px;background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.25);border-radius:20px;font-size:.62rem;color:var(--green);}
+.sb-nav{flex:1;padding:8px 0;overflow-y:auto;}
+.sb-s{padding:9px 16px 3px;font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;font-size:.81rem;font-weight:500;color:var(--muted);transition:all .15s;border-left:3px solid transparent;}
+.ni:hover{color:var(--text);background:var(--bg3);}
+.ni.on{color:var(--green);border-left-color:var(--green);background:rgba(63,185,80,.07);}
+.ni .ic{font-size:.88rem;width:18px;text-align:center;flex-shrink:0;}
+.nb{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:.62rem;font-weight:700;}
+.sb-foot{padding:10px 16px;border-top:1px solid var(--border);font-size:.68rem;color:var(--muted);}
+
+.main{margin-left:222px;min-height:100vh;}
+.topbar{padding:13px 26px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:10px;}
+.tb-l h2{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;}
+.tb-l p{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.tb-r{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.content{padding:20px 26px;}
+.sec{display:none;animation:fi .2s ease;}
+.sec.on{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.btn{padding:7px 13px;border-radius:6px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:.79rem;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.bp{background:var(--green2);color:#fff;border-color:var(--green2);}.bp:hover{background:var(--green);}
+.ba{background:rgba(210,153,34,.15);color:var(--amber);border-color:var(--amber);}
+.bb{background:rgba(88,166,255,.12);color:var(--blue);border-color:var(--blue);}
+.br{background:rgba(248,81,73,.12);color:var(--red);border-color:var(--red);}
+.bg{background:transparent;color:var(--text);}.bg:hover{background:var(--bg3);}
+.bsm{padding:5px 10px;font-size:.73rem;}
+
+.sr{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px;}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:15px 17px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sc.g::before{background:var(--green)}.sc.a::before{background:var(--amber)}.sc.r::before{background:var(--red)}.sc.b::before{background:var(--blue)}.sc.p::before{background:var(--purple)}
+.sc-l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.sc-v{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:700;}
+.sc-s{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.sc.g .sc-v{color:var(--green)}.sc.a .sc-v{color:var(--amber)}.sc.r .sc-v{color:var(--red)}.sc.b .sc-v{color:var(--blue)}.sc.p .sc-v{color:var(--purple)}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:17px;}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
+.ct{font-family:'Syne',sans-serif;font-size:.86rem;font-weight:700;display:flex;align-items:center;gap:7px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:15px;}
+
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;}
+thead th{padding:8px 10px;text-align:left;color:var(--muted);font-weight:500;font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:9px 10px;border-bottom:1px solid rgba(48,54,61,.5);vertical-align:middle;}
+tbody tr:hover{background:var(--bg3);}
+
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.67rem;font-weight:600;white-space:nowrap;}
+.bg-g{background:rgba(63,185,80,.15);color:var(--green)}.bg-a{background:rgba(210,153,34,.15);color:var(--amber)}.bg-r{background:rgba(248,81,73,.15);color:var(--red)}.bg-b{background:rgba(88,166,255,.15);color:var(--blue)}.bg-p{background:rgba(188,140,255,.15);color:var(--purple)}.bg-x{background:var(--bg3);color:var(--muted)}
+
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fr{display:flex;flex-direction:column;gap:5px;}
+.fr.full{grid-column:1/-1;}
+label{font-size:.73rem;font-weight:500;color:var(--muted);}
+input,select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.79rem;transition:border .15s;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);}
+input[readonly]{background:var(--bg3);color:var(--muted);}
+textarea{resize:vertical;min-height:66px;}
+
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:14px;}
+.mo.open{display:flex;}
+.md{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;width:580px;max-width:98vw;max-height:92vh;overflow-y:auto;}
+.md-lg{width:720px;}.md-xl{width:880px;}
+.md-t{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.ma{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:13px;border-top:1px solid var(--border);}
+
+#map{height:440px;border-radius:8px;overflow:hidden;}
+.leaflet-popup-content-wrapper{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.leaflet-popup-tip{background:var(--bg2);}
+.leaflet-popup-content{margin:11px 14px;font-size:.79rem;line-height:1.5;}
+.map-t{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--green);margin-bottom:4px;}
+
+.bg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(192px,1fr));gap:12px;}
+.bc{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .18s;position:relative;}
+.bc:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.3);}
+.bc.low{border-color:var(--amber)}.bc.out{border-color:var(--red);opacity:.8;}
+.bi{width:100%;height:100px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:2.5rem;overflow:hidden;}
+.bi img{width:100%;height:100px;object-fit:cover;}
+.binfo{padding:10px;}
+.bname{font-family:'Syne',sans-serif;font-weight:700;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bcode{font-size:.67rem;color:var(--muted);margin-bottom:4px;}
+.bprice{font-family:'Syne',sans-serif;font-size:.96rem;color:var(--green);font-weight:700;margin-top:5px;}
+.bstk{margin-top:6px;}
+.bsr{display:flex;justify-content:space-between;font-size:.66rem;color:var(--muted);margin-bottom:3px;}
+.pb{height:4px;background:var(--bg);border-radius:2px;overflow:hidden;}
+.pf{height:100%;border-radius:2px;transition:width .4s;}
+.bc-badge{position:absolute;top:6px;right:6px;}
+.bc-pdf{position:absolute;top:6px;left:6px;background:rgba(88,166,255,.2);border:1px solid var(--blue);color:var(--blue);border-radius:4px;padding:2px 5px;font-size:.6rem;font-weight:700;}
+
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:13px;}
+.tab{padding:8px 14px;font-size:.79rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab:hover{color:var(--text)}.tab.on{color:var(--green);border-bottom-color:var(--green);}
+
+.tl{display:flex;flex-direction:column;}
+.tli{display:flex;gap:11px;padding:9px 0;border-bottom:1px solid rgba(48,54,61,.5);}
+.tli:last-child{border-bottom:none;}
+.tld{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.tln{font-weight:600;font-size:.8rem;}
+.tls{font-size:.69rem;color:var(--muted);margin-top:1px;}
+
+.upz{border:2px dashed var(--border);border-radius:8px;padding:15px;text-align:center;cursor:pointer;transition:all .15s;}
+.upz:hover{border-color:var(--green);background:rgba(63,185,80,.03);}
+.upz p{font-size:.74rem;color:var(--muted);margin-top:4px;}
+
+.srch{position:relative;}
+.srch input{padding-left:28px;background:var(--bg3);}
+.srch::before{content:'🔍';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:.74rem;pointer-events:none;}
+
+/* GPS LINK BOX */
+.gps-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:12px;}
+.gps-box-title{font-size:.75rem;font-weight:600;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.gps-input-row{display:flex;gap:8px;}
+.gps-input-row input{flex:1;}
+.gps-btn-wh{display:inline-flex;align-items:center;gap:5px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.4);color:#25d366;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:500;transition:all .15s;white-space:nowrap;}
+.gps-btn-wh:hover{background:rgba(37,211,102,.25);}
+.gps-btn-loc{display:inline-flex;align-items:center;gap:5px;background:rgba(88,166,255,.12);border:1px solid var(--blue);color:var(--blue);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:500;transition:all .15s;white-space:nowrap;}
+.gps-btn-loc:hover{background:rgba(88,166,255,.22);}
+.gps-result{margin-top:8px;padding:8px 10px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2);border-radius:6px;font-size:.74rem;display:none;}
+
+/* PRICE BOX */
+.price-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:8px;}
+.price-box-t{font-size:.74rem;font-weight:600;color:var(--muted);margin-bottom:9px;}
+.pr-row{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;padding:4px 0;border-bottom:1px solid rgba(48,54,61,.4);}
+.pr-row:last-child{border-bottom:none;}
+.pr-label{color:var(--muted);}
+.pr-big{font-size:1.1rem;font-family:'Syne',sans-serif;font-weight:700;}
+
+.cc{position:relative;height:192px;}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(48,54,61,.4);font-size:.79rem;}
+.dr:last-child{border-bottom:none;}
+.dl{color:var(--muted)}.dv{font-weight:500;text-align:right;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+@media(max-width:860px){
+  .sb{width:54px;}
+  .sb-logo h1,.sb-logo p,.ver,.ni span:not(.ic),.nb,.sb-s,.sb-foot{display:none;}
+  .main{margin-left:54px;}
+  .sr{grid-template-columns:1fr 1fr;}
+  .g2,.g3{grid-template-columns:1fr;}
+  .content{padding:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <h1>🐄 BovineTrack</h1>
+    <p>SEMEX · Carolina</p>
+    <span class="ver">v2.0 Pro</span>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-s">Principal</div>
+    <div class="ni on" onclick="go('dashboard')"><span class="ic">📊</span><span>Dashboard</span></div>
+    <div class="sb-s">Clientes</div>
+    <div class="ni" onclick="go('mapa')"><span class="ic">🗺️</span><span>Mapa de Fincas</span></div>
+    <div class="ni" onclick="go('clientes')"><span class="ic">🏡</span><span>Clientes</span></div>
+    <div class="ni" onclick="go('visitas')"><span class="ic">📅</span><span>Visitas</span></div>
+    <div class="sb-s">Catálogo</div>
+    <div class="ni" onclick="go('toros')"><span class="ic">🐂</span><span>Toros</span></div>
+    <div class="ni" onclick="go('inventario')"><span class="ic">📦</span><span>Inventario</span><span class="nb" id="inv-badge" style="display:none">!</span></div>
+    <div class="sb-s">Comercial</div>
+    <div class="ni" onclick="go('ventas')"><span class="ic">💰</span><span>Ventas</span></div>
+    <div class="ni" onclick="go('remisiones')"><span class="ic">📄</span><span>Remisiones</span></div>
+    <div class="ni" onclick="go('gastos')"><span class="ic">🚗</span><span>Gastos Campo</span></div>
+    <div class="sb-s">Análisis</div>
+    <div class="ni" onclick="go('reportes')"><span class="ic">📈</span><span>Reportes</span></div>
+    <div class="sb-s">Datos</div>
+    <div class="ni" onclick="openM('mo-import')"><span class="ic">📂</span><span>Importar Excel</span></div>
+    <div class="ni" onclick="openM('mo-export')"><span class="ic">📥</span><span>Exportar Excel</span></div>
+    <div class="ni" onclick="openM('mo-precios')"><span class="ic">💲</span><span>Lista de Precios</span></div>
+  </div>
+  <div class="sb-foot">BovineTrack Pro © 2026</div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-l">
+      <h2 id="page-title">Dashboard</h2>
+      <p id="topbar-date"></p>
+    </div>
+    <div class="tb-r">
+      <div class="srch"><input id="gsearch" placeholder="Buscar cliente o toro..." style="width:210px;" oninput="globalSearch(this.value)"></div>
+      <button class="btn bp" onclick="openM('mo-venta')">➕ Nueva Venta</button>
+    </div>
+  </div>
+  <div class="content">
+
+  <!-- DASHBOARD -->
+  <div class="sec on" id="s-dashboard">
+    <div class="sr">
+      <div class="sc g"><div class="sc-l">Ventas Hoy</div><div class="sc-v" id="d-hoy">0</div><div class="sc-s" id="d-hoy-m">$0</div></div>
+      <div class="sc b"><div class="sc-l">Esta Semana</div><div class="sc-v" id="d-sem">0</div><div class="sc-s" id="d-sem-m">$0</div></div>
+      <div class="sc a"><div class="sc-l">Este Mes</div><div class="sc-v" id="d-mes">0</div><div class="sc-s" id="d-mes-m">$0</div></div>
+      <div class="sc r"><div class="sc-l">Toros Bajo Stock</div><div class="sc-v" id="d-low">0</div><div class="sc-s">requieren reposición</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ch"><div class="ct">📈 Ventas — últimas 8 semanas</div></div><div class="cc"><canvas id="ch-sem"></canvas></div></div>
+      <div class="card"><div class="ch"><div class="ct">🐂 Top toros del mes</div></div><div class="cc"><canvas id="ch-top"></canvas></div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ch"><div class="ct">📅 Próximas visitas</div></div><div class="tl" id="d-vis"></div></div>
+      <div class="card"><div class="ch"><div class="ct">⚠️ Alertas de stock</div></div><div id="d-stk"></div></div>
+    </div>
+  </div>
+
+  <!-- MAPA -->
+  <div class="sec" id="s-mapa">
+    <div class="card" style="margin-bottom:14px;">
+      <div class="ch">
+        <div class="ct">🗺️ Mapa General de Fincas</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="gps-btn-loc" onclick="locateMe()">📍 Mi ubicación actual</button>
+          <button class="btn bg bsm" onclick="if(map)map.setView([5,-74],6)">🔍 Ver Colombia</button>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:.72rem;color:var(--muted);">
+        <span>🟢 Visitada recientemente</span><span>🟡 Próxima ≤7 días</span><span>🔴 Atrasada</span><span>🔵 Sin programar</span>
+      </div>
+    </div>
+    <div class="sr" style="grid-template-columns:repeat(3,1fr);">
+      <div class="sc b"><div class="sc-l">Total Fincas</div><div class="sc-v" id="mp-tot">0</div></div>
+      <div class="sc g"><div class="sc-l">Con GPS</div><div class="sc-v" id="mp-gps">0</div></div>
+      <div class="sc r"><div class="sc-l">Sin GPS</div><div class="sc-v" id="mp-no">0</div></div>
+    </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="sec" id="s-clientes">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;flex-wrap:wrap;gap:9px;">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <div class="srch"><input id="cli-q" placeholder="Buscar..." style="width:200px;" oninput="filterCli()"></div>
+        <select id="cli-ruta" onchange="filterCli()" style="width:auto;background:var(--bg3);"><option value="">Todas las rutas</option></select>
+        <select id="cli-zona" onchange="filterCli()" style="width:auto;background:var(--bg3);"><option value="">Todas las zonas</option></select>
+      </div>
+      <button class="btn bp" onclick="openM('mo-cliente')">➕ Nuevo Cliente</button>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">🏡 Clientes <span class="bdg bg-b" id="cli-cnt">0</span></div></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Cliente / Finca</th><th>Predio</th><th>Zona</th><th>Ruta</th><th>Tipo Prod.</th><th>Cabezas</th><th>Últ. Visita</th><th>Próx. Visita</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="cli-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTE DETALLE -->
+  <div class="sec" id="s-cli-det">
+    <button class="btn bg bsm" onclick="go('clientes')" style="margin-bottom:13px;">← Volver a clientes</button>
+    <div class="g2">
+      <div id="cli-det-panel" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:17px;"></div>
+      <div class="card">
+        <div class="ct" style="margin-bottom:10px;">📍 Ubicación en mapa</div>
+        <div id="mini-map" style="height:185px;border-radius:8px;overflow:hidden;border:1px solid var(--border);"></div>
+        <div id="cli-gps-txt" style="font-size:.71rem;color:var(--muted);margin-top:6px;"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <div class="ct" style="margin-bottom:12px;">🛒 Historial de Compras</div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Fecha</th><th>Toro</th><th>Raza</th><th>Tipo</th><th>Dosis</th><th>P. Lista</th><th>P. Venta</th><th>Desc.%</th><th>Total</th><th>Remisión</th></tr></thead>
+          <tbody id="cli-hist"></tbody>
+        </table>
+      </div>
+      <div id="cli-hist-stats" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:18px;flex-wrap:wrap;font-size:.77rem;"></div>
+    </div>
+  </div>
+
+  <!-- VISITAS -->
+  <div class="sec" id="s-visitas">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:13px;">
+      <button class="btn bp" onclick="openM('mo-visita')">➕ Registrar Visita</button>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="ct" style="margin-bottom:11px;">📅 Agenda</div>
+        <div class="tw"><table><thead><tr><th>Cliente</th><th>Fecha</th><th>Tipo</th><th>Estado</th><th>Próxima</th></tr></thead><tbody id="vis-tbody"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="ct" style="margin-bottom:11px;">⚠️ Alertas de visita</div>
+        <div class="tl" id="vis-alert"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOROS -->
+  <div class="sec" id="s-toros">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;flex-wrap:wrap;gap:9px;">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <div class="srch"><input id="tq" placeholder="Buscar toro, raza, código..." style="width:220px;" oninput="filterToros()"></div>
+        <select id="t-raza-f" onchange="filterToros()" style="width:auto;background:var(--bg3);"><option value="">Todas las razas</option></select>
+        <select id="t-tipo-f" onchange="filterToros()" style="width:auto;background:var(--bg3);"><option value="">Conv. y Sexado</option><option>Convencional</option><option>Sexado hembras</option><option>Sexado machos</option></select>
+      </div>
+      <div style="display:flex;gap:7px;">
+        <button class="btn ba" onclick="openM('mo-imp-toros')">📊 Importar Excel</button>
+        <button class="btn bp" onclick="openM('mo-toro')">➕ Nuevo Toro</button>
+      </div>
+    </div>
+    <div class="bg-grid" id="toro-grid"></div>
+    <div id="toro-empty" style="display:none;text-align:center;padding:36px;color:var(--muted);">No se encontraron toros.</div>
+  </div>
+
+  <!-- INVENTARIO -->
+  <div class="sec" id="s-inventario">
+    <div id="inv-alerts"></div>
+    <div class="sr">
+      <div class="sc g"><div class="sc-l">Total Toros</div><div class="sc-v" id="inv-tot">0</div><div class="sc-s">en catálogo</div></div>
+      <div class="sc b"><div class="sc-l">Total Dosis</div><div class="sc-v" id="inv-dosis">0</div><div class="sc-s">stock actual</div></div>
+      <div class="sc a"><div class="sc-l">Stock Bajo</div><div class="sc-v" id="inv-bajo">0</div><div class="sc-s">≤ mínimo</div></div>
+      <div class="sc r"><div class="sc-l">Agotados</div><div class="sc-v" id="inv-cero">0</div><div class="sc-s">sin stock</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;flex-wrap:wrap;gap:8px;">
+      <div class="tabs" style="margin-bottom:0;border-bottom:none;">
+        <div class="tab on" onclick="invTab('all',this)">Todos</div>
+        <div class="tab" onclick="invTab('low',this)">Stock Bajo</div>
+        <div class="tab" onclick="invTab('out',this)">Agotados</div>
+      </div>
+      <div style="display:flex;gap:7px;">
+        <button class="btn bb bsm" onclick="openM('mo-entrada')">➕ Entrada Stock</button>
+        <button class="btn br bsm" onclick="openM('mo-dev')">↩️ Devolución</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tw">
+        <table>
+          <thead><tr><th>Toro</th><th>Código</th><th>Raza</th><th>Tipo</th><th>P. Lista ($)</th><th>Stock Actual</th><th>Mínimo</th><th>Vendidas (mes)</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENTAS -->
+  <div class="sec" id="s-ventas">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:13px;">
+      <button class="btn bp" onclick="openM('mo-venta')">➕ Nueva Venta</button>
+    </div>
+    <div class="sr">
+      <div class="sc g"><div class="sc-l">Hoy</div><div class="sc-v" id="v-hoy">0</div><div class="sc-s" id="v-hoy-m">$0</div></div>
+      <div class="sc b"><div class="sc-l">Semana</div><div class="sc-v" id="v-sem">0</div><div class="sc-s" id="v-sem-m">$0</div></div>
+      <div class="sc a"><div class="sc-l">Mes</div><div class="sc-v" id="v-mes">0</div><div class="sc-s" id="v-mes-m">$0</div></div>
+      <div class="sc p"><div class="sc-l">Año</div><div class="sc-v" id="v-anio">0</div><div class="sc-s" id="v-anio-m">$0</div></div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div class="ct">📋 Registro de Ventas</div>
+        <div style="display:flex;gap:7px;">
+          <input type="date" id="v-desde" onchange="renderVentas()" style="width:auto;background:var(--bg3);">
+          <input type="date" id="v-hasta" onchange="renderVentas()" style="width:auto;background:var(--bg3);">
+        </div>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Fecha</th><th>Cliente</th><th>Zona</th><th>Toro</th><th>Raza</th><th>Tipo</th><th>Dosis</th><th>P.Lista</th><th>P.Venta</th><th>Desc%</th><th>Total</th><th>Remisión</th><th></th></tr></thead>
+          <tbody id="v-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REMISIONES -->
+  <div class="sec" id="s-remisiones">
+    <div class="card">
+      <div class="ct" style="margin-bottom:13px;">📄 Galería de Remisiones</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(162px,1fr));gap:11px;" id="rem-grid"></div>
+    </div>
+  </div>
+
+  <!-- GASTOS -->
+  <div class="sec" id="s-gastos">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:13px;">
+      <button class="btn bp" onclick="openM('mo-gastos')">➕ Registrar Gasto</button>
+    </div>
+    <div class="sr">
+      <div class="sc r"><div class="sc-l">Gastos Semana</div><div class="sc-v" id="g-sem">$0</div><div class="sc-s" id="g-sem-k">0 km</div></div>
+      <div class="sc a"><div class="sc-l">Gastos Mes</div><div class="sc-v" id="g-mes">$0</div><div class="sc-s" id="g-mes-k">0 km</div></div>
+      <div class="sc g"><div class="sc-l">Rentabilidad Mes</div><div class="sc-v" id="g-rent">—</div><div class="sc-s">ventas netas</div></div>
+      <div class="sc b"><div class="sc-l">KM del Mes</div><div class="sc-v" id="g-km">0</div><div class="sc-s">kilómetros</div></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="ct" style="margin-bottom:11px;">🚗 Detalle de Gastos</div>
+        <div class="tw"><table><thead><tr><th>Fecha</th><th>Ruta</th><th>KM</th><th>Peajes</th><th>Combustible</th><th>Viáticos</th><th>Hotel</th><th>Total</th></tr></thead><tbody id="g-tbody"></tbody></table></div>
+      </div>
+      <div class="card"><div class="ct" style="margin-bottom:11px;">📊 Ventas vs Gastos</div><div class="cc"><canvas id="ch-gvg"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- REPORTES -->
+  <div class="sec" id="s-reportes">
+    <div class="g3">
+      <div class="card"><div class="ct" style="margin-bottom:9px;">📊 Ventas diarias (30d)</div><div class="cc"><canvas id="ch-dia"></canvas></div></div>
+      <div class="card"><div class="ct" style="margin-bottom:9px;">💰 Ingresos mensuales</div><div class="cc"><canvas id="ch-men"></canvas></div></div>
+      <div class="card"><div class="ct" style="margin-bottom:9px;">🐂 Top toros</div><div id="rep-toros" style="margin-top:4px;"></div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ct" style="margin-bottom:9px;">🏡 Top clientes</div><div id="rep-cli"></div></div>
+      <div class="card"><div class="ct" style="margin-bottom:9px;">📋 Resumen General</div><div id="rep-res"></div></div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- MODAL CLIENTE -->
+<div class="mo" id="mo-cliente">
+<div class="md md-lg">
+  <div class="md-t">🏡 Nuevo Cliente / Finca</div>
+  <div class="tabs">
+    <div class="tab on" onclick="cliTab('gen',this)">Datos Generales</div>
+    <div class="tab" onclick="cliTab('prod',this)">Finca & Producción</div>
+    <div class="tab" onclick="cliTab('gps',this)">Ubicación GPS</div>
+  </div>
+  <!-- TAB GEN -->
+  <div id="ctab-gen">
+    <div class="fg">
+      <div class="fr full"><label>Nombre Cliente / Propietario *</label><input id="c-nom" placeholder="Apellido Nombre o Razón Social"></div>
+      <div class="fr"><label>Predio / Nombre Finca</label><input id="c-pred" placeholder="Nombre de la finca"></div>
+      <div class="fr"><label>Vendedor / Código</label><input id="c-vend" placeholder="Ej: 45-4"></div>
+      <div class="fr"><label>Zona / Municipio</label><input id="c-zona" placeholder="Ej: Villavicencio, Meta"></div>
+      <div class="fr"><label>Ruta</label><select id="c-ruta"><option>R 8</option><option>R 10</option><option>R 12</option><option>R 14A</option><option>R 14B</option><option>Otra</option></select></div>
+      <div class="fr"><label>Grupo</label><input id="c-grupo" type="number" placeholder="1-9"></div>
+      <div class="fr"><label>Teléfono</label><input id="c-tel" placeholder="+57 300..."></div>
+      <div class="fr"><label>Email</label><input id="c-email" placeholder="correo@..."></div>
+      <div class="fr"><label>Tipo de Gestión</label><select id="c-gest"><option>Llamar</option><option>Pedido</option><option>Visita</option><option>Mensual</option></select></div>
+      <div class="fr"><label>Período visita (días)</label><input id="c-per" type="number" placeholder="30" value="30"></div>
+      <div class="fr"><label>Última Visita</label><input id="c-ultv" type="date"></div>
+      <div class="fr"><label>Próxima Visita</label><input id="c-proxv" type="date"></div>
+      <div class="fr full"><label>Observaciones</label><textarea id="c-obs" placeholder="Notas sobre el cliente..."></textarea></div>
+    </div>
+  </div>
+  <!-- TAB PROD -->
+  <div id="ctab-prod" style="display:none;">
+    <div class="fg">
+      <div class="fr"><label>Hectáreas</label><input id="c-hect" type="number" placeholder="0"></div>
+      <div class="fr"><label>N° de Cabezas de Ganado</label><input id="c-cab" type="number" placeholder="0"></div>
+      <div class="fr"><label>Tipo de Producción</label><select id="c-tprod"><option>Carne</option><option>Leche</option><option>Doble propósito</option><option>Bufalinos</option></select></div>
+      <div class="fr"><label>Raza Predominante del Hato</label><input id="c-rzh" placeholder="Ej: Brahman, Holstein..."></div>
+    </div>
+  </div>
+  <!-- TAB GPS -->
+  <div id="ctab-gps" style="display:none;">
+    <!-- WhatsApp / Google Maps extractor -->
+    <div class="gps-box">
+      <div class="gps-box-title">📱 Pegar link de WhatsApp o Google Maps</div>
+      <div class="gps-input-row">
+        <input id="c-link-gps" placeholder="Pega aquí el link: maps.google.com/?q=... o wa.me/... o cualquier link con coordenadas" oninput="extractGPS()">
+        <button class="gps-btn-wh" onclick="extractGPS()">📍 Extraer coordenadas</button>
+      </div>
+      <div id="gps-extract-result" class="gps-result"></div>
+      <div style="margin-top:10px;font-size:.71rem;color:var(--muted);">
+        ✅ Acepta links de: Google Maps, WhatsApp Location, Waze, maps.apple.com, geo: links, y cualquier URL con coordenadas decimales.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:11px;">
+      <button class="gps-btn-loc" onclick="capturaGPSActual()">📍 Capturar GPS desde este dispositivo</button>
+      <span id="gps-status" style="font-size:.73rem;color:var(--muted);align-self:center;"></span>
+    </div>
+    <div class="fg">
+      <div class="fr"><label>Latitud</label><input id="c-lat" placeholder="Ej: 4.142134" type="number" step="any" oninput="refreshMiniMap()"></div>
+      <div class="fr"><label>Longitud</label><input id="c-lng" placeholder="Ej: -73.626891" type="number" step="any" oninput="refreshMiniMap()"></div>
+    </div>
+    <div style="margin-top:9px;">
+      <label style="display:block;margin-bottom:6px;">Vista previa</label>
+      <div id="c-prev-map" style="height:175px;border-radius:8px;overflow:hidden;border:1px solid var(--border);"></div>
+    </div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-cliente')">Cancelar</button>
+    <button class="btn bp" onclick="saveCliente()">💾 Guardar Cliente</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL VISITA -->
+<div class="mo" id="mo-visita">
+<div class="md">
+  <div class="md-t">📅 Registrar Visita</div>
+  <div class="fg">
+    <div class="fr full"><label>Cliente *</label><select id="vi-cli"><option value="">Seleccionar...</option></select></div>
+    <div class="fr"><label>Fecha *</label><input id="vi-fecha" type="date"></div>
+    <div class="fr"><label>Tipo</label><select id="vi-tipo"><option>Visita comercial</option><option>Seguimiento técnico</option><option>Asesoría nutricional</option><option>Entrega producto</option></select></div>
+    <div class="fr"><label>Estado</label><select id="vi-est"><option value="programada">Programada</option><option value="realizada">Realizada</option><option value="cancelada">Cancelada</option></select></div>
+    <div class="fr"><label>Próxima visita</label><input id="vi-prox" type="date"></div>
+    <div class="fr full"><label>Notas</label><textarea id="vi-notas" placeholder="Observaciones, acuerdos..."></textarea></div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-visita')">Cancelar</button>
+    <button class="btn bp" onclick="saveVisita()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL TORO -->
+<div class="mo" id="mo-toro">
+<div class="md md-lg">
+  <div class="md-t">🐂 Registrar Toro</div>
+  <div class="fg">
+    <div class="fr"><label>Nombre del Toro *</label><input id="t-nom" placeholder="Ej: Fuego Rojo 54"></div>
+    <div class="fr"><label>Código / Registro *</label><input id="t-cod" placeholder="Ej: BR-2021-054"></div>
+    <div class="fr"><label>Raza</label>
+      <select id="t-raza">
+        <option>Brahman</option><option>Simmental</option><option>Angus</option><option>Aberdeen Angus</option>
+        <option>Gyr Lechero</option><option>Gyr Carne</option><option>Holstein</option><option>Girolando</option>
+        <option>Senepol</option><option>Nelore</option><option>Guzerá</option><option>Tabapuã</option>
+        <option>Indubrasil</option><option>Cebuino</option><option>Hereford</option><option>Limousin</option>
+        <option>Charolais</option><option>Jersey</option><option>Normando</option><option>Otra</option>
+      </select>
+    </div>
+    <div class="fr"><label>Tipo de Semen</label>
+      <select id="t-tipo"><option>Convencional</option><option>Sexado hembras</option><option>Sexado machos</option></select>
+    </div>
+    <div class="fr"><label>Precio Lista por Dosis ($)</label><input id="t-precio" type="number" placeholder="0"></div>
+    <div class="fr"><label>Stock Inicial (dosis)</label><input id="t-stock" type="number" placeholder="0"></div>
+    <div class="fr"><label>Stock Mínimo — alerta</label><input id="t-min" type="number" placeholder="10" value="10"></div>
+    <div class="fr"><label>Proveedor / País</label><input id="t-prov" placeholder="Ej: SEMEX, Canadá"></div>
+    <div class="fr full"><label>EPDs / Información Genética</label><textarea id="t-epd" placeholder="EPD carne, leche, facilidad parto, DPR..."></textarea></div>
+    <div class="fr full"><label>Descripción Comercial</label><textarea id="t-desc" placeholder="Puntos clave para la venta..."></textarea></div>
+    <div class="fr">
+      <label>Foto del Toro</label>
+      <div class="upz" onclick="document.getElementById('t-foto-inp').click()">
+        <div style="font-size:1.7rem;">📸</div><p>Subir imagen del toro</p>
+        <input type="file" id="t-foto-inp" accept="image/*" style="display:none;" onchange="prevToroFoto(event)">
+      </div>
+      <img id="t-foto-prev" style="display:none;max-height:90px;border-radius:6px;margin-top:6px;width:100%;object-fit:cover;">
+    </div>
+    <div class="fr">
+      <label>Ficha Técnica (PDF)</label>
+      <div class="upz" onclick="document.getElementById('t-pdf-inp').click()">
+        <div style="font-size:1.7rem;">📄</div><p>Subir ficha técnica PDF</p>
+        <input type="file" id="t-pdf-inp" accept=".pdf" style="display:none;" onchange="handleToroPDF(event)">
+      </div>
+      <div id="t-pdf-name" style="font-size:.71rem;color:var(--muted);margin-top:4px;"></div>
+    </div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-toro')">Cancelar</button>
+    <button class="btn bp" onclick="saveToro()">💾 Guardar Toro</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL TORO DETALLE -->
+<div class="mo" id="mo-toro-det">
+<div class="md md-lg">
+  <div style="display:flex;gap:16px;margin-bottom:15px;flex-wrap:wrap;">
+    <div id="td-img" style="width:145px;height:145px;border-radius:8px;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:3.5rem;flex-shrink:0;"></div>
+    <div style="flex:1;">
+      <div style="font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;" id="td-nom"></div>
+      <div style="font-size:.77rem;color:var(--muted);margin-top:2px;" id="td-cod"></div>
+      <div style="display:flex;gap:7px;margin-top:7px;flex-wrap:wrap;" id="td-badges"></div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.4rem;color:var(--green);font-weight:700;margin-top:9px;" id="td-precio"></div>
+      <div id="td-stk" style="margin-top:7px;max-width:210px;"></div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="tdTab('info',this)">Información</div>
+    <div class="tab" onclick="tdTab('ventas',this)">Ventas</div>
+    <div class="tab" onclick="tdTab('movs',this)">Movimientos</div>
+  </div>
+  <div id="tdtab-info">
+    <div class="fg">
+      <div class="fr full"><label>EPDs / Genética</label><div style="background:var(--bg3);border-radius:6px;padding:10px;font-size:.79rem;min-height:55px;" id="td-epd"></div></div>
+      <div class="fr full"><label>Descripción Comercial</label><div style="background:var(--bg3);border-radius:6px;padding:10px;font-size:.79rem;min-height:45px;" id="td-desc"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;" id="td-info-extra"></div>
+  </div>
+  <div id="tdtab-ventas" style="display:none;">
+    <div class="tw"><table><thead><tr><th>Fecha</th><th>Cliente</th><th>Dosis</th><th>P.Lista</th><th>P.Venta</th><th>Desc%</th><th>Total</th></tr></thead><tbody id="td-v-tbody"></tbody></table></div>
+  </div>
+  <div id="tdtab-movs" style="display:none;">
+    <div class="tl" id="td-movs-list"></div>
+  </div>
+  <div class="ma">
+    <button class="btn br bsm" id="td-pdf-btn" style="display:none;margin-right:auto;" onclick="openToroPDF()">📄 Ver Ficha Técnica PDF</button>
+    <button class="btn bg" onclick="closeM('mo-toro-det')">Cerrar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL ENTRADA STOCK -->
+<div class="mo" id="mo-entrada">
+<div class="md">
+  <div class="md-t">➕ Entrada de Stock</div>
+  <div class="fg">
+    <div class="fr full"><label>Toro *</label><select id="ent-toro"><option value="">Seleccionar...</option></select></div>
+    <div class="fr"><label>Cantidad a ingresar</label><input id="ent-cant" type="number" min="1" placeholder="0"></div>
+    <div class="fr"><label>Fecha</label><input id="ent-fecha" type="date"></div>
+    <div class="fr"><label>N° Factura / Lote</label><input id="ent-fac" placeholder="FAC-2026-001"></div>
+    <div class="fr full"><label>Observaciones</label><textarea id="ent-obs" placeholder="Proveedor, condición..."></textarea></div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-entrada')">Cancelar</button>
+    <button class="btn bp" onclick="saveEntrada()">Registrar Entrada</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL DEVOLUCION -->
+<div class="mo" id="mo-dev">
+<div class="md">
+  <div class="md-t">↩️ Registrar Devolución</div>
+  <div class="fg">
+    <div class="fr full"><label>Toro *</label><select id="dev-toro"><option value="">Seleccionar...</option></select></div>
+    <div class="fr"><label>Cantidad devuelta</label><input id="dev-cant" type="number" min="1" placeholder="0"></div>
+    <div class="fr"><label>Fecha</label><input id="dev-fecha" type="date"></div>
+    <div class="fr full"><label>Motivo</label><textarea id="dev-mot" placeholder="Razón de la devolución..."></textarea></div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-dev')">Cancelar</button>
+    <button class="btn bp" onclick="saveDevolucion()">Registrar Devolución</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL VENTA -->
+<div class="mo" id="mo-venta">
+<div class="md md-lg">
+  <div class="md-t">💰 Registrar Venta</div>
+  <div class="fg">
+    <div class="fr"><label>Fecha *</label><input id="ve-fecha" type="date"></div>
+    <div class="fr"><label>Cliente / Finca *</label><select id="ve-cli" onchange="onVeCliChange()"><option value="">Seleccionar...</option></select></div>
+    <div class="fr full" id="ve-cli-info" style="display:none;">
+      <div style="background:var(--bg3);border-radius:6px;padding:9px;font-size:.76rem;color:var(--muted);" id="ve-cli-txt"></div>
+    </div>
+    <div class="fr"><label>Toro *</label><select id="ve-toro" onchange="onVeToroChange()"><option value="">Seleccionar...</option></select></div>
+    <div class="fr" id="ve-toro-info" style="display:none;">
+      <div style="background:var(--bg3);border-radius:6px;padding:9px;font-size:.76rem;" id="ve-toro-txt"></div>
+    </div>
+    <div class="fr"><label>Dosis vendidas *</label><input id="ve-dosis" type="number" min="1" value="1" oninput="calcVenta()"></div>
+    <div class="fr full">
+      <!-- PRICE BOX -->
+      <div class="price-box" id="ve-price-box" style="display:none;">
+        <div class="price-box-t">💲 Calculadora de Precio</div>
+        <div class="pr-row"><span class="pr-label">Precio lista sugerido</span><span id="vp-lista" style="color:var(--muted);">—</span></div>
+        <div class="pr-row"><span class="pr-label">Precio que aplicarás</span><span id="vp-real-show" style="color:var(--text);font-weight:600;">—</span></div>
+        <div class="pr-row"><span class="pr-label">Descuento aplicado</span><span id="vp-desc" class="pr-big">0%</span></div>
+        <div class="pr-row"><span class="pr-label">Total calculado</span><span id="vp-total-show" style="color:var(--green);font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;">$0</span></div>
+      </div>
+    </div>
+    <div class="fr"><label>💲 Precio de Venta ($) — editable</label><input id="ve-precio" type="number" placeholder="Ingresa el precio real" oninput="calcVenta()"></div>
+    <div class="fr"><label>Total ($)</label><input id="ve-total" readonly></div>
+    <div class="fr"><label>N° Remisión</label><input id="ve-rem" placeholder="REM-2026-001"></div>
+    <div class="fr full">
+      <label>Foto de Remisión (opcional)</label>
+      <div class="upz" onclick="document.getElementById('ve-foto-inp').click()">
+        <div style="font-size:1.4rem;">📸</div><p>Subir foto de remisión</p>
+        <input type="file" id="ve-foto-inp" accept="image/*" style="display:none;" onchange="prevVentaFoto(event)">
+      </div>
+      <img id="ve-foto-prev" style="display:none;max-height:90px;border-radius:6px;margin-top:6px;width:100%;object-fit:cover;">
+    </div>
+    <div class="fr full"><label>Notas</label><textarea id="ve-notas"></textarea></div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-venta')">Cancelar</button>
+    <button class="btn bp" onclick="saveVenta()">💾 Guardar Venta</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL GASTOS -->
+<div class="mo" id="mo-gastos">
+<div class="md">
+  <div class="md-t">🚗 Gastos de Campo</div>
+  <div class="fg">
+    <div class="fr"><label>Fecha</label><input id="g-fecha" type="date"></div>
+    <div class="fr"><label>Ruta</label><select id="g-ruta"><option>R 8</option><option>R 10</option><option>R 12</option><option>R 14A</option><option>R 14B</option><option>Otra</option></select></div>
+    <div class="fr"><label>KM Inicial</label><input id="g-kmi" type="number" oninput="calcKm()"></div>
+    <div class="fr"><label>KM Final</label><input id="g-kmf" type="number" oninput="calcKm()"></div>
+    <div class="fr"><label>KM Recorridos</label><input id="g-kmr" readonly></div>
+    <div class="fr"><label>Peajes ($)</label><input id="g-peaj" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr"><label>Combustible ($)</label><input id="g-comb" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr"><label>Parqueadero ($)</label><input id="g-parq" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr"><label>Viáticos ($)</label><input id="g-viat" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr"><label>Hotel ($)</label><input id="g-hot" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr"><label>Despinchado ($)</label><input id="g-desp" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr"><label>Lavado ($)</label><input id="g-lav" type="number" placeholder="0" oninput="calcGasto()"></div>
+    <div class="fr full" style="background:var(--bg3);border-radius:8px;padding:11px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:.81rem;color:var(--muted);">Total del día:</span>
+      <span id="g-tot" style="font-family:'Syne',sans-serif;font-size:1.15rem;color:var(--red);font-weight:700;">$0</span>
+    </div>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-gastos')">Cancelar</button>
+    <button class="btn bp" onclick="saveGasto()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL LISTA DE PRECIOS -->
+<div class="mo" id="mo-precios">
+<div class="md md-lg">
+  <div class="md-t">💲 Lista de Precios Sugeridos</div>
+  <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px;">Sube tu lista de precios desde Excel o actualiza individualmente. Este precio aparece como <b style="color:var(--text);">referencia</b> al registrar una venta — tú decides el precio final.</p>
+  <div class="upz" onclick="document.getElementById('prec-file').click()" style="margin-bottom:14px;">
+    <div style="font-size:1.7rem;">📊</div>
+    <p style="font-size:.85rem;font-weight:600;color:var(--text);">Subir Excel con lista de precios</p>
+    <p>Columnas: Nombre, Código, Precio — actualiza masivamente</p>
+    <input type="file" id="prec-file" accept=".xlsx,.xls" style="display:none;" onchange="importarPrecios(event)">
+  </div>
+  <div id="prec-result" style="display:none;margin-bottom:12px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.25);border-radius:8px;padding:11px;font-size:.79rem;"></div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Toro</th><th>Código</th><th>Raza</th><th>Tipo</th><th>Precio Lista Actual ($)</th><th>Actualizar</th></tr></thead>
+      <tbody id="prec-tbody"></tbody>
+    </table>
+  </div>
+  <div class="ma"><button class="btn bg" onclick="closeM('mo-precios')">Cerrar</button></div>
+</div>
+</div>
+
+<!-- MODAL IMPORTAR EXCEL SEMEX -->
+<div class="mo" id="mo-import">
+<div class="md">
+  <div class="md-t">📂 Importar Excel SEMEX</div>
+  <div class="upz" id="imp-zone" onclick="document.getElementById('imp-file').click()"
+    ondragover="event.preventDefault();this.style.borderColor='var(--amber)'"
+    ondragleave="this.style.borderColor='var(--border)'"
+    ondrop="handleImportDrop(event)">
+    <div style="font-size:2.2rem;">📊</div>
+    <p style="font-size:.88rem;font-weight:600;color:var(--text);margin-top:6px;">Arrastra o selecciona tu Excel SEMEX</p>
+    <p>Programación_Rutas_SEMEX_2026.xlsx</p>
+    <input type="file" id="imp-file" accept=".xlsx,.xls" style="display:none;" onchange="handleImportFile(event)">
+  </div>
+  <div style="margin-top:13px;background:var(--bg3);border-radius:8px;padding:12px;">
+    <div style="font-size:.77rem;font-weight:600;margin-bottom:8px;">¿Qué importar?</div>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.79rem;margin-bottom:6px;"><input type="checkbox" id="imp-cli" checked style="accent-color:var(--amber);"> 🏡 Clientes del RUTERO</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.79rem;margin-bottom:6px;"><input type="checkbox" id="imp-ven" checked style="accent-color:var(--amber);"> 💰 Ventas de hojas VENTAS</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.79rem;margin-bottom:6px;"><input type="checkbox" id="imp-gas" checked style="accent-color:var(--amber);"> 🚗 Gastos de hojas REEMBOLSO</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.79rem;"><input type="checkbox" id="imp-rep" style="accent-color:var(--red);"> <span style="color:var(--red);">⚠️ Reemplazar datos existentes</span></label>
+  </div>
+  <div id="imp-prog" style="display:none;margin-top:13px;">
+    <div style="font-size:.79rem;color:var(--muted);" id="imp-status">Procesando...</div>
+    <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:6px;"><div id="imp-bar" style="height:100%;border-radius:4px;background:var(--amber);transition:width .3s;width:0%"></div></div>
+  </div>
+  <div id="imp-result" style="display:none;margin-top:12px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.25);border-radius:8px;padding:13px;font-size:.79rem;"></div>
+  <div class="ma"><button class="btn bg" onclick="closeM('mo-import')">Cerrar</button></div>
+</div>
+</div>
+
+<!-- MODAL IMPORTAR TOROS -->
+<div class="mo" id="mo-imp-toros">
+<div class="md">
+  <div class="md-t">🐂 Importar Catálogo de Toros</div>
+  <p style="font-size:.8rem;color:var(--muted);margin-bottom:13px;">El Excel debe tener columnas: <b style="color:var(--text);">Nombre, Codigo, Raza, Tipo, Precio, Stock, EPDs, Descripcion</b><br>Importa hasta 400 toros de una vez.</p>
+  <div class="upz" onclick="document.getElementById('imp-toros-f').click()">
+    <div style="font-size:2rem;">🐂</div><p>Subir Excel con catálogo de toros</p>
+    <input type="file" id="imp-toros-f" accept=".xlsx,.xls" style="display:none;" onchange="importarToros(event)">
+  </div>
+  <div id="imp-toros-res" style="display:none;margin-top:12px;"></div>
+  <div class="ma"><button class="btn bg" onclick="closeM('mo-imp-toros')">Cerrar</button></div>
+</div>
+</div>
+
+<!-- MODAL EXPORTAR -->
+<div class="mo" id="mo-export">
+<div class="md">
+  <div class="md-t">📥 Exportar a Excel</div>
+  <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:15px;">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.81rem;"><input type="checkbox" id="exp-v" checked style="accent-color:var(--green);"> 💰 Ventas completas</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.81rem;"><input type="checkbox" id="exp-c" checked style="accent-color:var(--green);"> 🏡 Clientes / Fincas</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.81rem;"><input type="checkbox" id="exp-t" checked style="accent-color:var(--green);"> 🐂 Catálogo toros</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.81rem;"><input type="checkbox" id="exp-vi" checked style="accent-color:var(--green);"> 📅 Visitas</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.81rem;"><input type="checkbox" id="exp-g" checked style="accent-color:var(--green);"> 🚗 Gastos campo</label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.81rem;"><input type="checkbox" id="exp-r" checked style="accent-color:var(--green);"> 📊 Resumen ejecutivo</label>
+  </div>
+  <div class="ma">
+    <button class="btn bg" onclick="closeM('mo-export')">Cancelar</button>
+    <button class="btn bp" onclick="exportarExcel()">📥 Descargar Excel</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ JAVASCRIPT ═══ -->
+<script>
+// ════════ DB ════════
+let db={clientes:[],visitas:[],toros:[],ventas:[],gastos:[],movimientos:[]};
+function loadDB(){const s=localStorage.getItem('bt_pro_v2');if(s)db=JSON.parse(s);['gastos','movimientos'].forEach(k=>{if(!db[k])db[k]=[];});}
+function saveDB(){localStorage.setItem('bt_pro_v2',JSON.stringify(db));}
+
+// ════════ HELPERS ════════
+const $ = id => document.getElementById(id);
+const money = n => '$'+(Math.round(n||0)).toLocaleString('es-CO');
+const pct = (a,b) => b?Math.round((1-a/b)*100):0;
+const todayStr = () => new Date().toISOString().split('T')[0];
+const wkStart = () => {const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().split('T')[0];};
+const moStart = () => {const d=new Date();d.setDate(1);return d.toISOString().split('T')[0];};
+const yrStart = () => new Date().getFullYear()+'-01-01';
+const sumF = (arr,k) => arr.reduce((a,v)=>a+(v[k]||0),0);
+const cliNom = id => {const c=db.clientes.find(x=>x.id==id);return c?(c.nombre+(c.predio?' — '+c.predio:'')):'—';};
+const cliZona = id => {const c=db.clientes.find(x=>x.id==id);return c?c.zona:'—';};
+const toroNom = id => {const t=db.toros.find(x=>x.id==id);return t?t.nombre:'—';};
+const toroObj = id => db.toros.find(x=>x.id==id);
+const stkColor = (s,m) => s<=0?'var(--red)':s<=(m||10)?'var(--amber)':'var(--green)';
+const stkBadge = (s,m) => s<=0?'<span class="bdg bg-r">Agotado</span>':s<=(m||10)?'<span class="bdg bg-a">Bajo</span>':'<span class="bdg bg-g">OK</span>';
+
+// ════════ SEED ════════
+function seed(){
+  if(db.toros.length>0)return;
+  db.toros=[
+    {id:1,nombre:'FUEGO ROJO 54',codigo:'BR-2021-054',raza:'Brahman',tipo:'Convencional',precio:85000,stock:120,minimo:15,proveedor:'SEMEX Colombia',epd:'Carne +18, Facilidad parto 95%, Docilidad excelente',desc:'Alta conversión carne, adaptado trópico',foto:null,pdf:null,pdfName:null},
+    {id:2,nombre:'PLATINUM 7',codigo:'SIM-2020-007',raza:'Simmental',tipo:'Sexado hembras',precio:120000,stock:80,minimo:10,proveedor:'SEMEX Canadá',epd:'Leche +850kg, Proteína +0.08%',desc:'Línea doble propósito, muy adaptable',foto:null,pdf:null,pdfName:null},
+    {id:3,nombre:'EL CACIQUE',codigo:'GYR-2022-031',raza:'Gyr Lechero',tipo:'Convencional',precio:95000,stock:60,minimo:10,proveedor:'SEMEX Brasil',epd:'Leche +1200kg, Grasa +0.15%',desc:'Excelente para cruce con Holstein',foto:null,pdf:null,pdfName:null},
+    {id:4,nombre:'GUERREIRO',codigo:'NEL-2019-012',raza:'Nelore',tipo:'Convencional',precio:78000,stock:8,minimo:15,proveedor:'SEMEX Brasil',epd:'Carne +22, DEP peso destete +12',desc:'Nelore puro, rústico y eficiente',foto:null,pdf:null,pdfName:null},
+    {id:5,nombre:'SEX PROFETA',codigo:'BRA-2021-099',raza:'Brahman',tipo:'Sexado hembras',precio:145000,stock:45,minimo:10,proveedor:'SEMEX USA',epd:'Alta fertilidad, conformación superior',desc:'Sexado premium hembras Brahman',foto:null,pdf:null,pdfName:null},
+    {id:6,nombre:'DOMINANT',codigo:'ANG-2020-055',raza:'Angus',tipo:'Convencional',precio:110000,stock:3,minimo:10,proveedor:'SEMEX Canadá',epd:'Carne marmoleada, facilidad parto',desc:'Aberdeen Angus puro, mercado premium',foto:null,pdf:null,pdfName:null},
+    {id:7,nombre:'ORION 30',codigo:'HOL-2022-030',raza:'Holstein',tipo:'Convencional',precio:88000,stock:95,minimo:20,proveedor:'SEMEX Canadá',epd:'Leche +2100kg, Proteína +0.22%',desc:'Alta producción leche',foto:null,pdf:null,pdfName:null},
+    {id:8,nombre:'MAXWELL',codigo:'SEN-2021-044',raza:'Senepol',tipo:'Convencional',precio:92000,stock:55,minimo:10,proveedor:'SEMEX USA',epd:'Tolerancia calor, adaptación tropical',desc:'Excelente para trópico colombiano',foto:null,pdf:null,pdfName:null},
+    {id:9,nombre:'LIAN',codigo:'GIR-2020-018',raza:'Girolando',tipo:'Convencional',precio:82000,stock:70,minimo:15,proveedor:'SEMEX Brasil',epd:'Leche +900kg, Proteína +0.12%',desc:'F1 Gir x Holstein, alta rusticidad',foto:null,pdf:null,pdfName:null},
+    {id:10,nombre:'BRANDO',codigo:'CEB-2022-077',raza:'Cebuino',tipo:'Convencional',precio:76000,stock:0,minimo:10,proveedor:'SEMEX Colombia',epd:'Adaptación tropical, docilidad +8',desc:'Cruza Cebú multipropósito',foto:null,pdf:null,pdfName:null},
+    {id:11,nombre:'WEBCAM',codigo:'LIM-2021-033',raza:'Limousin',tipo:'Sexado machos',precio:135000,stock:28,minimo:8,proveedor:'SEMEX Francia',epd:'Masa muscular excepcional, bajo en grasa',desc:'Ideal producción carne magra',foto:null,pdf:null,pdfName:null},
+    {id:12,nombre:'MERINO',codigo:'HOL-2020-011',raza:'Holstein',tipo:'Sexado hembras',precio:125000,stock:12,minimo:15,proveedor:'SEMEX Canadá',epd:'Leche +1800kg, CS -45',desc:'Genética lechera elite',foto:null,pdf:null,pdfName:null},
+    {id:13,nombre:'GALACTUS',codigo:'SIM-2021-088',raza:'Simmental',tipo:'Convencional',precio:98000,stock:67,minimo:10,proveedor:'SEMEX Alemania',epd:'Doble propósito, peso vivo +35kg',desc:'Simmental europeo adaptado',foto:null,pdf:null,pdfName:null},
+    {id:14,nombre:'RELOCO',codigo:'NOR-2022-015',raza:'Normando',tipo:'Convencional',precio:86000,stock:33,minimo:10,proveedor:'SEMEX Francia',epd:'Leche +650kg, Grasa +0.28%',desc:'Triple propósito, muy resistente',foto:null,pdf:null,pdfName:null},
+    {id:15,nombre:'BINIAM',codigo:'JER-2022-021',raza:'Jersey',tipo:'Convencional',precio:89000,stock:42,minimo:10,proveedor:'SEMEX Canadá',epd:'Grasa +0.45%, Proteína +0.35%',desc:'Jersey puro, sólidos altos',foto:null,pdf:null,pdfName:null},
+  ];
+  db.clientes=[
+    {id:1,nombre:'Carlos Méndez',predio:'El Paraíso',zona:'Montería, Córdoba',ruta:'R 14A',grupo:3,tel:'300 111 2233',email:'',gestion:'Llamar',periodo:30,cabezas:320,tipoprod:'Doble propósito',razaHato:'Brahman',lat:8.757,lng:-75.889,ultimaVisita:'2025-11-15',proximaVisita:'2026-02-20',obs:''},
+    {id:2,nombre:'Diana Torres',predio:'La Esperanza',zona:'Sincelejo, Sucre',ruta:'R 12',grupo:4,tel:'312 555 6677',email:'',gestion:'Pedido',periodo:30,cabezas:180,tipoprod:'Carne',razaHato:'Cebú Comercial',lat:9.304,lng:-75.397,ultimaVisita:'2026-01-08',proximaVisita:'2026-03-25',obs:''},
+    {id:3,nombre:'José Camargo',predio:'Hda. Dos Ríos',zona:'Valledupar, Cesar',ruta:'R 14B',grupo:2,tel:'317 888 9900',email:'',gestion:'Llamar',periodo:40,cabezas:500,tipoprod:'Carne',razaHato:'Brahman x Nelore',lat:10.463,lng:-73.253,ultimaVisita:'2025-12-20',proximaVisita:'2026-04-10',obs:''},
+  ];
+  const t=todayStr(), ad=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x.toISOString().split('T')[0];};
+  db.ventas=[
+    {id:1,fecha:t,clienteId:1,toroId:1,dosis:20,precioLista:85000,precioVenta:82000,total:1640000,remision:'REM-2026-001',notas:'',foto:null},
+    {id:2,fecha:ad(t,-3),clienteId:2,toroId:2,dosis:10,precioLista:120000,precioVenta:120000,total:1200000,remision:'REM-2026-002',notas:'',foto:null},
+    {id:3,fecha:ad(t,-7),clienteId:3,toroId:3,dosis:15,precioLista:95000,precioVenta:90000,total:1350000,remision:'REM-2026-003',notas:'',foto:null},
+    {id:4,fecha:ad(t,-10),clienteId:1,toroId:5,dosis:5,precioLista:145000,precioVenta:145000,total:725000,remision:'REM-2026-004',notas:'',foto:null},
+    {id:5,fecha:ad(t,-14),clienteId:2,toroId:8,dosis:8,precioLista:92000,precioVenta:88000,total:704000,remision:'REM-2026-005',notas:'',foto:null},
+  ];
+  saveDB();
+}
+
+// ════════ NAV ════════
+const ptitles={dashboard:'Dashboard',mapa:'Mapa de Fincas',clientes:'Clientes',
+  'cli-det':'Ficha de Cliente',visitas:'Visitas',toros:'Catálogo de Toros',
+  inventario:'Inventario',ventas:'Ventas',remisiones:'Remisiones',
+  gastos:'Gastos de Campo',reportes:'Reportes'};
+
+function go(name){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  const s=$('s-'+name)||$('s-cli-det');
+  if($('s-'+name)) $('s-'+name).classList.add('on');
+  document.querySelectorAll('.ni').forEach(n=>{
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+name+"'")) n.classList.add('on');
+  });
+  $('page-title').textContent=ptitles[name]||name;
+  if(name==='mapa') setTimeout(initMap,80);
+  else if(name==='dashboard') renderDash();
+  else if(name==='clientes') renderCli();
+  else if(name==='visitas') renderVisitas();
+  else if(name==='toros') renderToros();
+  else if(name==='inventario') renderInv();
+  else if(name==='ventas') renderVentas();
+  else if(name==='remisiones') renderRemisiones();
+  else if(name==='gastos') renderGastos();
+  else if(name==='reportes') renderReportes();
+}
+
+// ════════ MODALS ════════
+function openM(id){
+  if(['mo-venta','mo-visita','mo-entrada','mo-dev'].includes(id)){
+    ['vi-cli','ve-cli'].forEach(sid=>{
+      const el=$(sid);if(!el)return;
+      el.innerHTML='<option value="">Seleccionar...</option>';
+      db.clientes.sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(c=>el.innerHTML+=`<option value="${c.id}">${c.nombre}${c.predio?' — '+c.predio:''}</option>`);
+    });
+    ['ve-toro'].forEach(sid=>{
+      const el=$(sid);if(!el)return;
+      el.innerHTML='<option value="">Seleccionar...</option>';
+      db.toros.sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(t=>el.innerHTML+=`<option value="${t.id}">${t.nombre} (${t.raza}${t.tipo!=='Convencional'?' · '+t.tipo:''})</option>`);
+    });
+    ['ent-toro','dev-toro'].forEach(sid=>{
+      const el=$(sid);if(!el)return;
+      el.innerHTML='<option value="">Seleccionar...</option>';
+      db.toros.sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(t=>el.innerHTML+=`<option value="${t.id}">${t.nombre} — Stock: ${t.stock}</option>`);
+    });
+  }
+  if(id==='mo-venta'){$('ve-fecha').value=todayStr();$('ve-foto-prev').style.display='none';$('ve-cli-info').style.display='none';$('ve-toro-info').style.display='none';$('ve-price-box').style.display='none';ventaFoto=null;}
+  if(id==='mo-entrada') $('ent-fecha').value=todayStr();
+  if(id==='mo-dev') $('dev-fecha').value=todayStr();
+  if(id==='mo-gastos') $('g-fecha').value=todayStr();
+  if(id==='mo-precios') renderPreciosModal();
+  $(id).classList.add('open');
+}
+function closeM(id){$(id).classList.remove('open');}
+window.addEventListener('click',e=>{if(e.target.classList.contains('mo'))e.target.classList.remove('open');});
+
+// ════════ GPS EXTRACTOR ════════
+function extractGPS(){
+  const raw=$('c-link-gps').value.trim();
+  if(!raw)return;
+  const res=$('gps-extract-result');
+  let lat=null,lng=null;
+
+  // Patrones de coordenadas en URLs y texto
+  const patterns=[
+    /[?&@](-?\d+\.?\d*)[,+](-?\d+\.?\d*)/,        // ?q=lat,lng  @lat,lng
+    /\/(-?\d+\.\d+),(-?\d+\.\d+)/,                  // /lat,lng en path
+    /lat=(-?\d+\.?\d*).*?l[no]n[g]?=(-?\d+\.?\d*)/i,// lat=...lon=...
+    /(-?\d{1,3}\.\d{4,})[,\s]+(-?\d{1,3}\.\d{4,})/, // decimales sueltos
+    /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,               // ll=lat,lng
+    /center=(-?\d+\.?\d*),(-?\d+\.?\d*)/,           // center=
+    /point=(-?\d+\.?\d*)[,+](-?\d+\.?\d*)/,         // point=
+    /destination=(-?\d+\.?\d*),(-?\d+\.?\d*)/,      // destination=
+  ];
+
+  for(const p of patterns){
+    const m=raw.match(p);
+    if(m){
+      const a=parseFloat(m[1]),b=parseFloat(m[2]);
+      // Validar rango coordenadas Colombia aprox
+      if(a>=-4&&a<=14&&b>=-79&&b<=-65){lat=a;lng=b;break;}
+      if(b>=-4&&b<=14&&a>=-79&&a<=-65){lat=b;lng=a;break;}
+      if(Math.abs(a)<=90&&Math.abs(b)<=180){lat=a;lng=b;break;}
+    }
+  }
+
+  if(lat&&lng){
+    $('c-lat').value=lat.toFixed(6);
+    $('c-lng').value=lng.toFixed(6);
+    res.style.display='block';
+    res.innerHTML=`✅ <b>Coordenadas extraídas:</b> Latitud <b>${lat.toFixed(6)}</b>, Longitud <b>${lng.toFixed(6)}</b> — Verificado en mapa abajo`;
+    res.style.background='rgba(63,185,80,.08)';
+    res.style.border='1px solid rgba(63,185,80,.3)';
+    setTimeout(refreshMiniMap,100);
+  } else {
+    res.style.display='block';
+    res.innerHTML=`❌ No se encontraron coordenadas en ese link. Prueba copiando directamente desde Google Maps (toca el punto en el mapa y copia las coordenadas que aparecen abajo).`;
+    res.style.background='rgba(248,81,73,.08)';
+    res.style.border='1px solid rgba(248,81,73,.3)';
+  }
+}
+
+function capturaGPSActual(){
+  $('gps-status').textContent='📡 Obteniendo GPS...';
+  if(!navigator.geolocation){$('gps-status').textContent='❌ GPS no disponible';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    $('c-lat').value=pos.coords.latitude.toFixed(6);
+    $('c-lng').value=pos.coords.longitude.toFixed(6);
+    $('gps-status').textContent='✅ GPS capturado correctamente';
+    refreshMiniMap();
+  },()=>{$('gps-status').textContent='❌ No se pudo obtener';});
+}
+
+// ════════ MINI MAP ════════
+let miniMap=null,miniMapInited=false;
+function refreshMiniMap(){
+  const lat=parseFloat($('c-lat').value),lng=parseFloat($('c-lng').value);
+  if(!lat||!lng)return;
+  if(!miniMapInited){
+    miniMapInited=true;
+    miniMap=L.map('c-prev-map').setView([lat,lng],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
+    L.marker([lat,lng]).addTo(miniMap);
+  } else {
+    miniMap.setView([lat,lng],13);
+    miniMap.eachLayer(l=>{if(l instanceof L.Marker)miniMap.removeLayer(l);});
+    L.marker([lat,lng]).addTo(miniMap);
+  }
+}
+
+// ════════ MAIN MAP ════════
+let map,mapInited=false;
+function initMap(){
+  if(mapInited){map.invalidateSize();renderMapMarkers();updMapStats();return;}
+  mapInited=true;
+  map=L.map('map').setView([6,-74],6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+  renderMapMarkers();updMapStats();
+}
+function renderMapMarkers(){
+  if(!map)return;
+  map.eachLayer(l=>{if(l instanceof L.Marker)map.removeLayer(l);});
+  const now=new Date();
+  db.clientes.forEach(c=>{
+    if(!c.lat||!c.lng)return;
+    let em='🔵';
+    if(c.proximaVisita){
+      const d=Math.ceil((new Date(c.proximaVisita)-now)/86400000);
+      em=d<0?'🔴':d<=7?'🟡':'🟢';
+    }
+    const icon=L.divIcon({className:'',html:`<div style="font-size:1.4rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">${em}</div>`,iconSize:[24,24],iconAnchor:[12,12]});
+    const total=db.ventas.filter(v=>v.clienteId==c.id).reduce((a,v)=>a+v.total,0);
+    const compras=db.ventas.filter(v=>v.clienteId==c.id).length;
+    L.marker([c.lat,c.lng],{icon}).addTo(map).bindPopup(`
+      <div class="map-t">${c.nombre}</div>
+      <b>${c.predio||'—'}</b> · ${c.zona||'—'}<br>
+      🛣️ ${c.ruta||'—'} · Grupo ${c.grupo||'—'}<br>
+      🐄 ${c.cabezas||'—'} cabezas · ${c.tipoprod||'—'}<br>
+      📅 Última visita: ${c.ultimaVisita||'No registrada'}<br>
+      📅 Próxima: ${c.proximaVisita||'Sin programar'}<br>
+      🛒 ${compras} compras · ${money(total)}<br><br>
+      <button onclick="verCliente(${c.id});closeAllPopups();" style="background:var(--green2);color:#fff;border:none;border-radius:5px;padding:5px 11px;cursor:pointer;font-size:.74rem;width:100%;">Ver ficha completa</button>
+    `);
+  });
+}
+function closeAllPopups(){if(map)map.closePopup();}
+function updMapStats(){
+  const tot=db.clientes.length,con=db.clientes.filter(c=>c.lat&&c.lng).length;
+  $('mp-tot').textContent=tot;$('mp-gps').textContent=con;$('mp-no').textContent=tot-con;
+}
+function locateMe(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    if(!mapInited)initMap();
+    map.setView([pos.coords.latitude,pos.coords.longitude],13);
+    L.marker([pos.coords.latitude,pos.coords.longitude],{
+      icon:L.divIcon({className:'',html:'<div style="font-size:1.5rem;">📍</div>',iconSize:[24,24],iconAnchor:[12,12]})
+    }).addTo(map).bindPopup('📍 Tu ubicación actual').openPopup();
+  });
+}
+
+// ════════ TABS ════════
+function cliTab(name,el){
+  ['gen','prod','gps'].forEach(t=>$('ctab-'+t).style.display=t===name?'block':'none');
+  document.querySelectorAll('#mo-cliente .tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  if(name==='gps') setTimeout(refreshMiniMap,80);
+}
+function tdTab(name,el){
+  ['info','ventas','movs'].forEach(t=>$('tdtab-'+t).style.display=t===name?'block':'none');
+  document.querySelectorAll('#mo-toro-det .tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+function invTab(f,el){
+  document.querySelectorAll('#s-inventario .tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on'); renderInv(f);
+}
+
+// ════════ SAVE CLIENTE ════════
+function saveCliente(){
+  const nom=$('c-nom').value.trim();
+  if(!nom){alert('El nombre es obligatorio');return;}
+  db.clientes.push({
+    id:Date.now(),nombre:nom,predio:$('c-pred').value,vendedor:$('c-vend').value,
+    zona:$('c-zona').value,ruta:$('c-ruta').value,grupo:$('c-grupo').value,
+    tel:$('c-tel').value,email:$('c-email').value,gestion:$('c-gest').value,
+    periodo:parseInt($('c-per').value)||30,hectareas:$('c-hect').value,
+    cabezas:$('c-cab').value,tipoprod:$('c-tprod').value,razaHato:$('c-rzh').value,
+    ultimaVisita:$('c-ultv').value||null,proximaVisita:$('c-proxv').value||null,
+    lat:parseFloat($('c-lat').value)||null,lng:parseFloat($('c-lng').value)||null,
+    obs:$('c-obs').value
+  });
+  saveDB();closeM('mo-cliente');renderCli();
+  if(mapInited)renderMapMarkers();updMapStats();
+}
+
+// ════════ SAVE VISITA ════════
+function saveVisita(){
+  const cId=parseInt($('vi-cli').value),fecha=$('vi-fecha').value;
+  if(!cId||!fecha){alert('Selecciona cliente y fecha');return;}
+  const v={id:Date.now(),clienteId:cId,fecha,tipo:$('vi-tipo').value,
+    estado:$('vi-est').value,notas:$('vi-notas').value,proximaVisita:$('vi-prox').value};
+  db.visitas.push(v);
+  const c=db.clientes.find(x=>x.id==cId);
+  if(c){if(v.estado==='realizada')c.ultimaVisita=fecha;if(v.proximaVisita)c.proximaVisita=v.proximaVisita;}
+  saveDB();closeM('mo-visita');renderVisitas();
+}
+
+// ════════ TOROS ════════
+let toroFoto=null,toroPDF=null,toroPDFName=null;
+function prevToroFoto(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{toroFoto=ev.target.result;const img=$('t-foto-prev');img.src=toroFoto;img.style.display='block';};
+  r.readAsDataURL(f);
+}
+function handleToroPDF(e){
+  const f=e.target.files[0];if(!f)return;
+  toroPDFName=f.name;$('t-pdf-name').textContent='📄 '+f.name;
+  const r=new FileReader();
+  r.onload=ev=>{toroPDF=ev.target.result;};r.readAsDataURL(f);
+}
+function saveToro(){
+  const nom=$('t-nom').value.trim();if(!nom){alert('Nombre obligatorio');return;}
+  db.toros.push({
+    id:Date.now(),nombre:nom,codigo:$('t-cod').value,raza:$('t-raza').value,
+    tipo:$('t-tipo').value,precio:parseFloat($('t-precio').value)||0,
+    stock:parseInt($('t-stock').value)||0,minimo:parseInt($('t-min').value)||10,
+    proveedor:$('t-prov').value,epd:$('t-epd').value,desc:$('t-desc').value,
+    foto:toroFoto,pdf:toroPDF,pdfName:toroPDFName
+  });
+  saveDB();closeM('mo-toro');toroFoto=null;toroPDF=null;toroPDFName=null;
+  ['t-nom','t-cod','t-prov','t-epd','t-desc'].forEach(id=>$(id).value='');
+  $('t-stock').value='';$('t-precio').value='';
+  $('t-foto-prev').style.display='none';$('t-pdf-name').textContent='';
+  renderToros();renderInv();checkAlerts();
+}
+
+let curToroId=null;
+function verToro(id){
+  curToroId=id;const t=db.toros.find(x=>x.id==id);if(!t)return;
+  $('td-img').innerHTML=t.foto?`<img src="${t.foto}" style="width:100%;height:100%;object-fit:cover;">`:'🐂';
+  $('td-nom').textContent=t.nombre;
+  $('td-cod').textContent=t.codigo+' · '+(t.proveedor||'');
+  $('td-badges').innerHTML=`<span class="bdg bg-b">${t.raza}</span><span class="bdg ${t.tipo==='Convencional'?'bg-x':'bg-p'}">${t.tipo}</span>${t.pdf?'<span class="bdg bg-b">📄 PDF</span>':''}`;
+  $('td-precio').textContent=money(t.precio)+' / dosis';
+  const sc=stkColor(t.stock,t.minimo);
+  $('td-stk').innerHTML=`<div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-bottom:3px;"><span>Stock disponible</span><b style="color:${sc}">${t.stock} dosis</b></div><div class="pb"><div class="pf" style="width:${Math.min(100,(t.stock/Math.max(t.stock,t.minimo*4))*100)}%;background:${sc}"></div></div>`;
+  $('td-epd').textContent=t.epd||'Sin información';
+  $('td-desc').textContent=t.desc||'Sin descripción';
+  $('td-info-extra').innerHTML=`
+    <div class="dr"><span class="dl">Precio lista</span><span class="dv" style="color:var(--green)">${money(t.precio)}</span></div>
+    <div class="dr"><span class="dl">Stock mínimo</span><span class="dv">${t.minimo} dosis</span></div>
+    <div class="dr"><span class="dl">Proveedor</span><span class="dv">${t.proveedor||'—'}</span></div>
+    <div class="dr"><span class="dl">Stock actual</span><span class="dv" style="color:${sc}">${t.stock} dosis</span></div>
+  `;
+  const vt=db.ventas.filter(v=>v.toroId==id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  $('td-v-tbody').innerHTML=vt.length?vt.map(v=>`<tr><td>${v.fecha}</td><td>${cliNom(v.clienteId)}</td><td>${v.dosis}</td><td>${money(v.precioLista||v.precio||0)}</td><td>${money(v.precioVenta||v.precio||0)}</td><td>${pct(v.precioVenta||v.precio,v.precioLista||v.precio)}%</td><td>${money(v.total)}</td></tr>`).join(''):'<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:14px;">Sin ventas</td></tr>';
+  const movs=db.movimientos.filter(m=>m.toroId==id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  $('td-movs-list').innerHTML=movs.length?movs.map(m=>{
+    const col=m.tipo==='entrada'?'var(--green)':m.tipo==='devolucion'?'var(--blue)':'var(--red)';
+    const ic=m.tipo==='entrada'?'➕':m.tipo==='devolucion'?'↩️':'➖';
+    return `<div class="tli"><div class="tld" style="background:${col}"></div><div><div class="tln">${ic} ${m.tipo.toUpperCase()} · ${m.cantidad} dosis</div><div class="tls">${m.fecha} · ${m.obs||''}</div></div></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:.79rem;padding:10px 0;">Sin movimientos registrados.</div>';
+  $('td-pdf-btn').style.display=t.pdf?'flex':'none';
+  tdTab('info',document.querySelector('#mo-toro-det .tab'));
+  openM('mo-toro-det');
+}
+function openToroPDF(){
+  const t=db.toros.find(x=>x.id==curToroId);if(!t||!t.pdf)return;
+  const w=window.open();w.document.write(`<html><head><title>${t.nombre} — Ficha Técnica</title></head><body style="margin:0"><iframe src="${t.pdf}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+}
+
+// ════════ INVENTARIO ════════
+function saveEntrada(){
+  const tid=parseInt($('ent-toro').value),cant=parseInt($('ent-cant').value)||0;
+  if(!tid||cant<=0){alert('Selecciona toro y cantidad');return;}
+  const t=db.toros.find(x=>x.id==tid);if(t)t.stock+=cant;
+  db.movimientos.push({id:Date.now(),toroId:tid,tipo:'entrada',cantidad:cant,
+    fecha:$('ent-fecha').value,obs:'Factura: '+$('ent-fac').value+' '+$('ent-obs').value});
+  saveDB();closeM('mo-entrada');renderInv();checkAlerts();
+}
+function saveDevolucion(){
+  const tid=parseInt($('dev-toro').value),cant=parseInt($('dev-cant').value)||0;
+  if(!tid||cant<=0){alert('Selecciona toro y cantidad');return;}
+  const t=db.toros.find(x=>x.id==tid);if(t)t.stock+=cant;
+  db.movimientos.push({id:Date.now(),toroId:tid,tipo:'devolucion',cantidad:cant,
+    fecha:$('dev-fecha').value,obs:$('dev-mot').value});
+  saveDB();closeM('mo-dev');renderInv();checkAlerts();
+}
+
+// ════════ VENTA — PRECIO MANUAL CON REFERENCIA ════════
+let ventaFoto=null;
+function onVeCliChange(){
+  const cId=parseInt($('ve-cli').value),c=db.clientes.find(x=>x.id==cId);
+  const area=$('ve-cli-info');
+  if(c){area.style.display='block';$('ve-cli-txt').innerHTML=`🏡 ${c.predio||'—'} · 📍 ${c.zona||'—'} · 🛣️ ${c.ruta||'—'} · 🐄 ${c.cabezas||'—'} cabezas`;}
+  else area.style.display='none';
+}
+function onVeToroChange(){
+  const tId=parseInt($('ve-toro').value),t=db.toros.find(x=>x.id==tId);
+  const info=$('ve-toro-info');
+  if(t){
+    info.style.display='block';
+    const sc=stkColor(t.stock,t.minimo);
+    $('ve-toro-txt').innerHTML=`<b>${t.raza}</b> · ${t.tipo} · P. Lista: <b style="color:var(--green)">${money(t.precio)}</b> · Stock: <b style="color:${sc}">${t.stock} dosis</b>`;
+    // NO auto-completar precio — solo mostrar referencia
+    $('ve-price-box').style.display='block';
+    $('vp-lista').textContent=money(t.precio)+' / dosis';
+    calcVenta();
+  } else {info.style.display='none';$('ve-price-box').style.display='none';}
+}
+function calcVenta(){
+  const tId=parseInt($('ve-toro').value);
+  const t=db.toros.find(x=>x.id==tId);
+  const dosis=parseFloat($('ve-dosis').value)||0;
+  const precioVenta=parseFloat($('ve-precio').value)||0;
+  const precioLista=t?t.precio:0;
+  const total=dosis*precioVenta;
+  $('ve-total').value=total>0?total.toLocaleString('es-CO'):'';
+  if(t&&$('ve-price-box').style.display!=='none'){
+    $('vp-real-show').textContent=precioVenta>0?money(precioVenta)+' / dosis':'Ingresa el precio';
+    const desc=precioLista&&precioVenta?pct(precioVenta,precioLista):0;
+    $('vp-desc').textContent=desc>0?desc+'% descuento':desc<0?Math.abs(desc)+'% por encima':'Sin descuento';
+    $('vp-desc').style.color=desc>0?'var(--amber)':desc<0?'var(--red)':'var(--green)';
+    $('vp-total-show').textContent=total>0?money(total):'—';
+  }
+}
+function prevVentaFoto(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{ventaFoto=ev.target.result;const img=$('ve-foto-prev');img.src=ventaFoto;img.style.display='block';};
+  r.readAsDataURL(f);
+}
+function saveVenta(){
+  const cId=parseInt($('ve-cli').value),tId=parseInt($('ve-toro').value);
+  const dosis=parseInt($('ve-dosis').value)||0;
+  const precioVenta=parseFloat($('ve-precio').value)||0;
+  if(!cId||!tId||dosis<=0){alert('Completa cliente, toro y dosis');return;}
+  if(precioVenta<=0){alert('Ingresa el precio de venta');return;}
+  const toro=db.toros.find(x=>x.id==tId);
+  if(toro&&toro.stock<dosis){if(!confirm(`Stock insuficiente (${toro.stock} dosis disponibles). ¿Registrar igualmente?`))return;}
+  const precioLista=toro?toro.precio:precioVenta;
+  const venta={id:Date.now(),fecha:$('ve-fecha').value,clienteId:cId,toroId:tId,
+    dosis,precioLista,precioVenta,total:dosis*precioVenta,
+    remision:$('ve-rem').value,notas:$('ve-notas').value,foto:ventaFoto};
+  db.ventas.push(venta);
+  if(toro)toro.stock=Math.max(0,toro.stock-dosis);
+  db.movimientos.push({id:Date.now()+1,toroId:tId,tipo:'venta',cantidad:dosis,
+    fecha:venta.fecha,obs:'Venta → '+cliNom(cId)});
+  saveDB();closeM('mo-venta');ventaFoto=null;
+  $('ve-foto-prev').style.display='none';
+  renderVentas();renderDash();renderInv();checkAlerts();
+}
+
+// ════════ GASTOS ════════
+function calcKm(){
+  const ini=parseFloat($('g-kmi').value)||0,fin=parseFloat($('g-kmf').value)||0;
+  $('g-kmr').value=fin>ini?fin-ini:0;calcGasto();
+}
+function calcGasto(){
+  const ids=['g-peaj','g-comb','g-parq','g-viat','g-hot','g-desp','g-lav'];
+  const tot=ids.reduce((a,id)=>a+(parseFloat($(id).value)||0),0);
+  $('g-tot').textContent=money(tot);
+}
+function saveGasto(){
+  const g={id:Date.now(),fecha:$('g-fecha').value,ruta:$('g-ruta').value,
+    kmIni:parseFloat($('g-kmi').value)||0,kmFin:parseFloat($('g-kmf').value)||0,
+    kmRec:parseFloat($('g-kmr').value)||0,
+    peajes:parseFloat($('g-peaj').value)||0,combustible:parseFloat($('g-comb').value)||0,
+    parqueadero:parseFloat($('g-parq').value)||0,viaticos:parseFloat($('g-viat').value)||0,
+    hotel:parseFloat($('g-hot').value)||0,despinchado:parseFloat($('g-desp').value)||0,
+    lavado:parseFloat($('g-lav').value)||0};
+  g.total=g.peajes+g.combustible+g.parqueadero+g.viaticos+g.hotel+g.despinchado+g.lavado;
+  db.gastos.push(g);saveDB();closeM('mo-gastos');renderGastos();
+}
+
+// ════════ IMPORTAR PRECIOS ════════
+function importarPrecios(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+    let cnt=0;
+    rows.forEach(row=>{
+      const nom=(row['Nombre']||row['nombre']||row['NOMBRE']||'').toString().trim();
+      const cod=(row['Codigo']||row['codigo']||row['CODIGO']||row['Código']||'').toString().trim();
+      const precio=parseFloat(row['Precio']||row['precio']||row['PRECIO']||0);
+      if(!precio)return;
+      const t=db.toros.find(x=>x.nombre.toUpperCase()===nom.toUpperCase()||x.codigo.toUpperCase()===cod.toUpperCase());
+      if(t){t.precio=precio;cnt++;}
+    });
+    saveDB();
+    $('prec-result').style.display='block';
+    $('prec-result').innerHTML=`✅ ${cnt} precios actualizados correctamente.`;
+    renderPreciosModal();renderToros();renderInv();
+  };
+  r.readAsArrayBuffer(f);
+}
+function renderPreciosModal(){
+  const tb=$('prec-tbody');
+  tb.innerHTML='';
+  db.toros.sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(t=>{
+    tb.innerHTML+=`<tr>
+      <td>${t.nombre}</td><td>${t.codigo}</td>
+      <td><span class="bdg bg-b">${t.raza}</span></td>
+      <td><span class="bdg bg-x">${t.tipo}</span></td>
+      <td><b style="color:var(--green)">${money(t.precio)}</b></td>
+      <td><input type="number" value="${t.precio}" style="width:110px;background:var(--bg3);" onchange="updatePrecio(${t.id},this.value)"></td>
+    </tr>`;
+  });
+}
+function updatePrecio(id,val){
+  const t=db.toros.find(x=>x.id==id);
+  if(t){t.precio=parseFloat(val)||0;saveDB();}
+}
+
+// ════════ IMPORTAR TOROS EXCEL ════════
+function importarToros(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
+    let cnt=0,upd=0;
+    rows.forEach(row=>{
+      const nom=(row.Nombre||row.nombre||row.NOMBRE||'').toString().trim();
+      const cod=(row.Codigo||row.codigo||row.CODIGO||row.Código||'').toString().trim();
+      if(!nom)return;
+      const ex=db.toros.find(x=>x.nombre.toUpperCase()===nom.toUpperCase()||x.codigo.toUpperCase()===cod.toUpperCase());
+      const data={nombre:nom,codigo:cod,raza:row.Raza||row.raza||'Por definir',
+        tipo:row.Tipo||row.tipo||'Convencional',precio:parseFloat(row.Precio||row.precio)||0,
+        stock:parseInt(row.Stock||row.stock)||0,minimo:parseInt(row.Minimo||row.minimo||row.Mínimo)||10,
+        proveedor:row.Proveedor||row.proveedor||'SEMEX',
+        epd:row.EPDs||row.epds||row.Genetica||row.genetica||'',
+        desc:row.Descripcion||row.descripcion||row.Descripción||''};
+      if(ex){Object.assign(ex,data);upd++;}
+      else{db.toros.push({...data,id:Date.now()+Math.random(),foto:null,pdf:null,pdfName:null});cnt++;}
+    });
+    saveDB();
+    const res=$('imp-toros-res');
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.25);border-radius:8px;padding:12px;font-size:.79rem;">✅ <b>${cnt}</b> toros nuevos importados · <b>${upd}</b> actualizados. Total catálogo: <b>${db.toros.length}</b> toros.</div>`;
+    renderToros();renderInv();checkAlerts();
+  };
+  r.readAsArrayBuffer(f);
+}
+
+// ════════ IMPORTAR EXCEL SEMEX ════════
+function handleImportDrop(e){
+  e.preventDefault();$('imp-zone').style.borderColor='var(--border)';
+  processImport(e.dataTransfer.files[0]);
+}
+function handleImportFile(e){processImport(e.target.files[0]);}
+
+function processImport(file){
+  if(!file)return;
+  $('imp-prog').style.display='block';$('imp-result').style.display='none';
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      $('imp-status').textContent='Leyendo Excel...';$('imp-bar').style.width='15%';
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:true});
+      let cliCnt=0,venCnt=0,gasCnt=0,toroSet=new Set();
+      if($('imp-rep').checked){db.clientes=[];db.ventas=[];db.gastos=[];}
+
+      if($('imp-cli').checked){
+        $('imp-status').textContent='Importando clientes...';$('imp-bar').style.width='35%';
+        const rutaSheets=wb.SheetNames.filter(n=>n.toUpperCase().includes('RUTERO')||n.toUpperCase().includes('RUTA'));
+        const vistos=new Set(db.clientes.map(x=>x.nombre.toLowerCase().trim()));
+        rutaSheets.forEach(sn=>{
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null});
+          let hr=0;
+          for(let i=0;i<Math.min(3,rows.length);i++){if(rows[i]&&rows[i].some(c=>c&&String(c).toLowerCase().includes('cliente'))){hr=i;break;}}
+          for(let i=hr+1;i<rows.length;i++){
+            const row=rows[i];if(!row||!row[1])continue;
+            const nom=String(row[1]).trim();if(!nom||vistos.has(nom.toLowerCase()))continue;
+            vistos.add(nom.toLowerCase());
+            let ultV=null;
+            for(const c of[7,9,10]){if(row[c] instanceof Date&&!ultV)ultV=row[c].toISOString().split('T')[0];}
+            db.clientes.push({
+              id:Date.now()+Math.random(),nombre:nom,predio:row[2]?String(row[2]).trim():'',
+              zona:row[4]?String(row[4]).trim():'',ruta:row[0]?String(row[0]).trim():'',
+              grupo:row[5]?String(row[5]):'',tel:'',email:'',
+              gestion:row[6]?String(row[6]).trim():'Llamar',periodo:row[10]||30,
+              cabezas:'',tipoprod:'',razaHato:'',lat:null,lng:null,
+              ultimaVisita:ultV,proximaVisita:null,obs:'Importado: '+sn
+            });cliCnt++;
+          }
+        });
+      }
+
+      if($('imp-ven').checked){
+        $('imp-status').textContent='Importando ventas...';$('imp-bar').style.width='60%';
+        const vSheets=wb.SheetNames.filter(n=>n.toUpperCase().includes('VENTA'));
+        vSheets.forEach(sn=>{
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null});
+          const m=sn.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})/);
+          let fh=null;
+          if(m){const y=m[3].length===2?'20'+m[3]:m[3];fh=`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+          let hr=0;
+          for(let i=0;i<Math.min(3,rows.length);i++){if(rows[i]&&rows[i].some(c=>c&&String(c).toLowerCase().includes('cliente'))){hr=i;break;}}
+          for(let i=hr+1;i<rows.length;i++){
+            const row=rows[i];if(!row||!row[1])continue;
+            const nomCli=String(row[1]).trim();if(!nomCli)continue;
+            const cli=db.clientes.find(x=>x.nombre.toLowerCase()===nomCli.toLowerCase());
+            let valSemen=0;
+            for(let c=30;c<=33;c++){if(row[c]&&typeof row[c]==='number'&&row[c]>1000){valSemen=row[c];break;}}
+            const tEnVenta=[];
+            for(let c=14;c<=29;c+=2){
+              const nomT=row[c]?String(row[c]).trim():null;
+              const unid=row[c-1]?parseInt(row[c-1]):null;
+              if(nomT&&nomT!=='TORO'&&unid&&unid>0){toroSet.add(nomT);tEnVenta.push({toro:nomT,unid});}
+            }
+            tEnVenta.forEach(tv=>{
+              let toroObj=db.toros.find(x=>x.nombre.toUpperCase()===tv.toro.toUpperCase());
+              if(!toroObj){
+                toroObj={id:Date.now()+Math.random(),nombre:tv.toro,codigo:tv.toro,raza:'Por definir',
+                  tipo:'Convencional',precio:valSemen&&tv.unid?Math.round(valSemen/tv.unid):0,
+                  stock:100,minimo:10,proveedor:'SEMEX',epd:'',desc:'',foto:null,pdf:null,pdfName:null};
+                db.toros.push(toroObj);
+              }
+              const pUnit=valSemen&&tv.unid?Math.round(valSemen/tv.unid):toroObj.precio;
+              db.ventas.push({id:Date.now()+Math.random(),fecha:fh||todayStr(),
+                clienteId:cli?cli.id:null,toroId:toroObj.id,dosis:tv.unid,
+                precioLista:pUnit,precioVenta:pUnit,total:pUnit*tv.unid,
+                remision:'',notas:'Importado: '+sn,foto:null});venCnt++;
+            });
+          }
+        });
+      }
+
+      if($('imp-gas').checked){
+        $('imp-status').textContent='Importando gastos...';$('imp-bar').style.width='80%';
+        const gSheets=wb.SheetNames.filter(n=>n.toUpperCase().includes('REEMBOLSO'));
+        gSheets.forEach(sn=>{
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null});
+          const m=sn.match(/(\d{1,2})[-\/](\d{2})[-\/](\d{4})/);
+          let fbase=m?`${m[3]}-${m[2]}-${m[1].padStart(2,'0')}`:todayStr();
+          let kmIni=[],kmFin=[],comb=[],parq=[],viat=[],hot=[],desp=[],lav=[],peajTot=[0,0,0,0,0,0];
+          for(let i=0;i<rows.length;i++){
+            const row=rows[i];if(!row||!row[0])continue;
+            const lbl=String(row[0]).toUpperCase().trim();
+            const vals=[1,2,3,4,5,6].map(c=>typeof row[c]==='number'?row[c]:0);
+            if(lbl==='KM INICIAL')kmIni=vals;
+            else if(lbl==='KM FINAL')kmFin=vals;
+            else if(lbl==='COMBUSTIBLE')comb=vals;
+            else if(lbl==='PARQUEADERO')parq=vals;
+            else if(lbl==='VIATICOS'||lbl==='VIÁTICOS')viat=vals;
+            else if(lbl==='HOTEL')hot=vals;
+            else if(lbl==='DESPINCHADO')desp=vals;
+            else if(lbl==='LAVADO')lav=vals;
+          }
+          for(let i=5;i<16;i++){
+            if(!rows[i]||rows[i][0])continue;
+            for(let c=0;c<6;c++)peajTot[c]+=(typeof rows[i][c+1]==='number'?rows[i][c+1]:0);
+          }
+          const dias=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+          for(let d=0;d<6;d++){
+            const tot=peajTot[d]+(comb[d]||0)+(parq[d]||0)+(viat[d]||0)+(hot[d]||0)+(desp[d]||0)+(lav[d]||0);
+            if(tot===0&&!kmIni[d])continue;
+            db.gastos.push({id:Date.now()+Math.random(),fecha:fbase,dia:dias[d],ruta:sn.replace(/REEMBOLSO/i,'').trim(),
+              kmIni:kmIni[d]||0,kmFin:kmFin[d]||0,kmRec:(kmFin[d]||0)-(kmIni[d]||0),
+              peajes:peajTot[d],combustible:comb[d]||0,parqueadero:parq[d]||0,
+              viaticos:viat[d]||0,hotel:hot[d]||0,despinchado:desp[d]||0,lavado:lav[d]||0,total:tot});
+            gasCnt++;
+          }
+        });
+      }
+
+      saveDB();$('imp-bar').style.width='100%';$('imp-status').textContent='✅ Completado';
+      $('imp-result').style.display='block';
+      $('imp-result').innerHTML=`<b style="color:var(--green)">✅ Importación exitosa</b><br><br>
+        🏡 Clientes importados: <b>${cliCnt}</b><br>
+        💰 Ventas importadas: <b>${venCnt}</b><br>
+        🐂 Toros detectados: <b>${toroSet.size}</b><br>
+        🚗 Días de gastos: <b>${gasCnt}</b>`;
+      renderDash();renderCli();renderVentas();renderToros();renderInv();checkAlerts();
+    }catch(err){$('imp-status').textContent='❌ Error: '+err.message;console.error(err);}
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// ════════ EXPORTAR ════════
+function exportarExcel(){
+  const wb=XLSX.utils.book_new();
+  const hoy=new Date().toLocaleDateString('es-CO');
+
+  if($('exp-v').checked){
+    const rows=[['VENTAS — BovineTrack Pro','','','','','','','','','','','',''],
+      ['Generado: '+hoy],[''],
+      ['Fecha','Cliente','Predio','Zona','Toro','Raza','Tipo','Dosis','P.Lista($)','P.Venta($)','Desc%','Total($)','Remisión','Notas']];
+    db.ventas.sort((a,b)=>b.fecha.localeCompare(a.fecha)).forEach(v=>{
+      const c=db.clientes.find(x=>x.id==v.clienteId),t=db.toros.find(x=>x.id==v.toroId);
+      const pl=v.precioLista||v.precio||0,pv=v.precioVenta||v.precio||0;
+      rows.push([v.fecha,c?c.nombre:'—',c?c.predio:'—',c?c.zona:'—',
+        t?t.nombre:'—',t?t.raza:'—',t?t.tipo:'—',v.dosis,pl,pv,
+        pl?pct(pv,pl)+'%':'—',v.total,v.remision||'—',v.notas||'']);
+    });
+    rows.push(['','','','','','','','TOTAL','','','',' ={SUM(L5:L'+( 4+db.ventas.length)+')}']);
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:12},{wch:24},{wch:18},{wch:18},{wch:20},{wch:14},{wch:16},{wch:8},{wch:12},{wch:12},{wch:8},{wch:14},{wch:16},{wch:28}];
+    ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:13}},{s:{r:1,c:0},e:{r:1,c:13}}];
+    XLSX.utils.book_append_sheet(wb,ws,'💰 Ventas');
+  }
+
+  if($('exp-c').checked){
+    const rows=[['CLIENTES — BovineTrack Pro','','','','','','',''],['Generado: '+hoy],[''],
+      ['Nombre','Predio','Zona','Ruta','Grupo','Tipo Prod.','Cabezas','Raza Hato','Teléfono','Últ. Visita','Próx. Visita','Lat','Lng','Observaciones']];
+    db.clientes.forEach(c=>rows.push([c.nombre,c.predio||'',c.zona||'',c.ruta||'',c.grupo||'',
+      c.tipoprod||'',c.cabezas||'',c.razaHato||'',c.tel||'',c.ultimaVisita||'',
+      c.proximaVisita||'',c.lat||'',c.lng||'',c.obs||'']));
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:24},{wch:18},{wch:20},{wch:8},{wch:8},{wch:16},{wch:10},{wch:16},{wch:16},{wch:12},{wch:12},{wch:12},{wch:12},{wch:30}];
+    XLSX.utils.book_append_sheet(wb,ws,'🏡 Clientes');
+  }
+
+  if($('exp-t').checked){
+    const rows=[['CATÁLOGO TOROS — BovineTrack Pro','','','','',''],['Generado: '+hoy],[''],
+      ['Nombre','Código','Raza','Tipo','Precio Lista ($)','Stock','Mínimo','Proveedor','EPDs','Descripción']];
+    db.toros.forEach(t=>rows.push([t.nombre,t.codigo,t.raza,t.tipo,t.precio,t.stock,t.minimo,t.proveedor||'',t.epd||'',t.desc||'']));
+    rows.push(['','','','','','TOTAL DOSIS: '+db.toros.reduce((a,t)=>a+t.stock,0)]);
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:22},{wch:16},{wch:14},{wch:16},{wch:14},{wch:8},{wch:8},{wch:16},{wch:40},{wch:40}];
+    XLSX.utils.book_append_sheet(wb,ws,'🐂 Toros');
+  }
+
+  if($('exp-vi').checked){
+    const rows=[['VISITAS — BovineTrack Pro','','','',''],['Generado: '+hoy],[''],
+      ['Cliente','Fecha','Tipo','Estado','Próxima Visita','Notas']];
+    db.visitas.sort((a,b)=>a.fecha.localeCompare(b.fecha)).forEach(v=>{
+      const c=db.clientes.find(x=>x.id==v.clienteId);
+      rows.push([c?c.nombre:'—',v.fecha,v.tipo,v.estado,v.proximaVisita||'—',v.notas||'']);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:24},{wch:12},{wch:22},{wch:12},{wch:14},{wch:40}];
+    XLSX.utils.book_append_sheet(wb,ws,'📅 Visitas');
+  }
+
+  if($('exp-g').checked){
+    const rows=[['GASTOS CAMPO — BovineTrack Pro','','','',''],['Generado: '+hoy],[''],
+      ['Fecha','Día','Ruta','KM Rec.','Peajes','Combustible','Parqueadero','Viáticos','Hotel','Despinchado','Lavado','Total']];
+    db.gastos.forEach(g=>rows.push([g.fecha,g.dia||'',g.ruta||'',g.kmRec||0,
+      g.peajes||0,g.combustible||0,g.parqueadero||0,g.viaticos||0,
+      g.hotel||0,g.despinchado||0,g.lavado||0,g.total||0]));
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:12},{wch:10},{wch:12},{wch:8},{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:12},{wch:10},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws,'🚗 Gastos');
+  }
+
+  if($('exp-r').checked){
+    const t=todayStr(),ws2=wkStart(),ms=moStart(),ys=yrStart();
+    const vH=db.ventas.filter(v=>v.fecha===t),vS=db.ventas.filter(v=>v.fecha>=ws2);
+    const vM=db.ventas.filter(v=>v.fecha>=ms),vA=db.ventas.filter(v=>v.fecha>=ys);
+    const sum=(arr,k)=>arr.reduce((a,v)=>a+(v[k]||0),0);
+    const toroMap={};
+    db.ventas.forEach(v=>{if(!toroMap[v.toroId])toroMap[v.toroId]={d:0,t:0};toroMap[v.toroId].d+=v.dosis;toroMap[v.toroId].t+=v.total;});
+    const rows=[
+      ['RESUMEN EJECUTIVO — BovineTrack Pro'],['Generado: '+hoy],[''],
+      ['📊 VENTAS POR PERÍODO','Dosis','Ingresos ($)'],
+      ['Hoy',sum(vH,'dosis'),sum(vH,'total')],
+      ['Esta semana',sum(vS,'dosis'),sum(vS,'total')],
+      ['Este mes',sum(vM,'dosis'),sum(vM,'total')],
+      ['Este año',sum(vA,'dosis'),sum(vA,'total')],
+      ['Total histórico',sum(db.ventas,'dosis'),sum(db.ventas,'total')],
+      [''],['🐂 TOP TOROS','Dosis Vendidas','Ingresos ($)'],
+    ];
+    Object.entries(toroMap).sort((a,b)=>b[1].d-a[1].d).slice(0,10).forEach(([id,d])=>{
+      rows.push([toroNom(parseInt(id)),d.d,d.t]);
+    });
+    rows.push([''],['🏡 TOP CLIENTES','Dosis Compradas','Total Comprado ($)']);
+    const cliMap={};
+    db.ventas.forEach(v=>{if(!cliMap[v.clienteId])cliMap[v.clienteId]={d:0,t:0};cliMap[v.clienteId].d+=v.dosis;cliMap[v.clienteId].t+=v.total;});
+    Object.entries(cliMap).sort((a,b)=>b[1].d-a[1].d).slice(0,10).forEach(([id,d])=>{
+      rows.push([cliNom(parseInt(id)),d.d,d.t]);
+    });
+    rows.push([''],['📦 INVENTARIO ACTUAL','Stock','Precio Lista ($)']);
+    db.toros.sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(t=>{rows.push([t.nombre,t.stock,t.precio]);});
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:30},{wch:16},{wch:18}];
+    XLSX.utils.book_append_sheet(wb,ws,'📊 Resumen');
+  }
+
+  XLSX.writeFile(wb,`BovineTrack_${todayStr()}.xlsx`);
+  closeM('mo-export');
+}
+
+// ════════ RENDER FUNCTIONS ════════
+let chSem,chTop,chGvg,chDia,chMen;
+
+function renderDash(){
+  const t=todayStr(),ws=wkStart(),ms=moStart();
+  const vH=db.ventas.filter(v=>v.fecha===t),vS=db.ventas.filter(v=>v.fecha>=ws),vM=db.ventas.filter(v=>v.fecha>=ms);
+  const sum=(arr,k)=>arr.reduce((a,v)=>a+(v[k]||0),0);
+  $('d-hoy').textContent=sum(vH,'dosis');$('d-hoy-m').textContent=money(sum(vH,'total'));
+  $('d-sem').textContent=sum(vS,'dosis');$('d-sem-m').textContent=money(sum(vS,'total'));
+  $('d-mes').textContent=sum(vM,'dosis');$('d-mes-m').textContent=money(sum(vM,'total'));
+  const bajos=db.toros.filter(t=>t.stock<=t.minimo);
+  $('d-low').textContent=bajos.length;
+
+  // Próximas visitas
+  const now=new Date(),dvEl=$('d-vis');dvEl.innerHTML='';
+  db.clientes.filter(c=>c.proximaVisita).sort((a,b)=>a.proximaVisita.localeCompare(b.proximaVisita)).slice(0,6).forEach(c=>{
+    const diff=Math.ceil((new Date(c.proximaVisita)-now)/86400000);
+    const col=diff<0?'var(--red)':diff<=5?'var(--amber)':'var(--green)';
+    const lbl=diff<0?`⚠️ Atrasada ${Math.abs(diff)}d`:diff===0?'Hoy':`En ${diff} días`;
+    dvEl.innerHTML+=`<div class="tli"><div class="tld" style="background:${col}"></div><div><div class="tln">${c.nombre}</div><div class="tls">${c.zona||'—'} · ${lbl}</div></div></div>`;
+  });
+  if(!dvEl.innerHTML)dvEl.innerHTML='<div style="color:var(--muted);font-size:.79rem;padding:8px 0;">No hay visitas programadas.</div>';
+
+  // Stock alerts
+  const dsEl=$('d-stk');dsEl.innerHTML='';
+  bajos.slice(0,6).forEach(t=>{
+    const col=stkColor(t.stock,t.minimo);
+    dsEl.innerHTML+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(48,54,61,.5);font-size:.79rem;">
+      <span>${t.nombre}</span>
+      <span style="color:${col};font-weight:600;">${t.stock} dosis ${t.stock===0?'⚠️':''}</span>
+    </div>`;
+  });
+  if(!dsEl.innerHTML)dsEl.innerHTML='<div style="color:var(--muted);font-size:.79rem;padding:8px 0;">✅ Todo el inventario está bien.</div>';
+
+  // Charts
+  const slabels=[],sdata=[];
+  for(let i=7;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i*7);
+    const w0=new Date(d);w0.setDate(d.getDate()-d.getDay());
+    const w1=new Date(w0);w1.setDate(w0.getDate()+6);
+    const ws2=w0.toISOString().split('T')[0],we=w1.toISOString().split('T')[0];
+    slabels.push('S'+(8-i));
+    sdata.push(db.ventas.filter(v=>v.fecha>=ws2&&v.fecha<=we).reduce((a,v)=>a+v.dosis,0));
+  }
+  const ctx1=$('ch-sem').getContext('2d');if(chSem)chSem.destroy();
+  chSem=new Chart(ctx1,{type:'bar',data:{labels:slabels,datasets:[{data:sdata,backgroundColor:'rgba(63,185,80,.7)',borderRadius:5,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'#30363d'},ticks:{color:'#7d8590'}},y:{grid:{color:'#30363d'},ticks:{color:'#7d8590'}}},responsive:true,maintainAspectRatio:false}});
+
+  const toroMap={};
+  vM.forEach(v=>{toroMap[v.toroId]=(toroMap[v.toroId]||0)+v.dosis;});
+  const topEntries=Object.entries(toroMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const ctx2=$('ch-top').getContext('2d');if(chTop)chTop.destroy();
+  chTop=new Chart(ctx2,{type:'doughnut',data:{labels:topEntries.map(([id])=>toroNom(parseInt(id))),datasets:[{data:topEntries.map(([,d])=>d),backgroundColor:['#3fb950','#58a6ff','#d29922','#f85149','#bc8cff']}]},options:{plugins:{legend:{labels:{color:'#e6edf3',font:{size:11}}}},responsive:true,maintainAspectRatio:false}});
+}
+
+function renderCli(){
+  const rutas=[...new Set(db.clientes.map(c=>c.ruta).filter(Boolean))].sort();
+  const zonas=[...new Set(db.clientes.map(c=>c.zona).filter(Boolean))].sort();
+  const rSel=$('cli-ruta'),zSel=$('cli-zona');
+  rSel.innerHTML='<option value="">Todas las rutas</option>';rutas.forEach(r=>rSel.innerHTML+=`<option>${r}</option>`);
+  zSel.innerHTML='<option value="">Todas las zonas</option>';zonas.forEach(z=>zSel.innerHTML+=`<option>${z}</option>`);
+  filterCli();
+}
+function filterCli(){
+  const q=($('cli-q').value||'').toLowerCase();
+  const r=$('cli-ruta').value,z=$('cli-zona').value;
+  const now=new Date();
+  const filtered=db.clientes.filter(c=>{
+    if(r&&c.ruta!==r)return false;
+    if(z&&c.zona!==z)return false;
+    if(q&&!c.nombre.toLowerCase().includes(q)&&!((c.predio||'').toLowerCase().includes(q))&&!((c.zona||'').toLowerCase().includes(q)))return false;
+    return true;
+  }).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  $('cli-cnt').textContent=filtered.length;
+  const tb=$('cli-tbody');tb.innerHTML='';
+  filtered.forEach(c=>{
+    let badge='<span class="bdg bg-x">Sin programar</span>';
+    if(c.proximaVisita){
+      const diff=Math.ceil((new Date(c.proximaVisita)-now)/86400000);
+      badge=diff<0?'<span class="bdg bg-r">⚠️ Atrasada</span>':diff<=7?'<span class="bdg bg-a">Próxima</span>':'<span class="bdg bg-g">Programada</span>';
+    }
+    const tipoBdg=c.tipoprod?`<span class="bdg bg-b">${c.tipoprod}</span>`:'—';
+    tb.innerHTML+=`<tr>
+      <td><b>${c.nombre}</b></td><td>${c.predio||'—'}</td><td>${c.zona||'—'}</td>
+      <td><span class="bdg bg-x">${c.ruta||'—'}</span></td>
+      <td>${tipoBdg}</td><td>${c.cabezas||'—'}</td>
+      <td>${c.ultimaVisita||'—'}</td><td>${c.proximaVisita||'—'}</td>
+      <td>${badge}</td>
+      <td><button class="btn bg bsm" onclick="verCliente(${c.id})">👁 Ver</button></td>
+    </tr>`;
+  });
+  if(!filtered.length)tb.innerHTML='<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:20px;">No se encontraron clientes.</td></tr>';
+}
+
+function verCliente(id){
+  const c=db.clientes.find(x=>x.id==id);if(!c)return;
+  $('s-cli-det').classList.add('on');
+  document.querySelectorAll('.sec').forEach(s=>{if(s.id!=='s-cli-det')s.classList.remove('on');});
+  $('page-title').textContent='Ficha: '+c.nombre;
+
+  // Panel info
+  $('cli-det-panel').innerHTML=`
+    <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:12px;">${c.nombre}</div>
+    <div class="dr"><span class="dl">Predio</span><span class="dv">${c.predio||'—'}</span></div>
+    <div class="dr"><span class="dl">Zona / Municipio</span><span class="dv">${c.zona||'—'}</span></div>
+    <div class="dr"><span class="dl">Ruta</span><span class="dv"><span class="bdg bg-x">${c.ruta||'—'}</span></span></div>
+    <div class="dr"><span class="dl">Grupo</span><span class="dv">${c.grupo||'—'}</span></div>
+    <div class="dr"><span class="dl">Teléfono</span><span class="dv">${c.tel||'—'}</span></div>
+    <div class="dr"><span class="dl">Tipo de Producción</span><span class="dv"><span class="bdg bg-b">${c.tipoprod||'—'}</span></span></div>
+    <div class="dr"><span class="dl">Cabezas de Ganado</span><span class="dv">${c.cabezas||'—'}</span></div>
+    <div class="dr"><span class="dl">Raza Predominante</span><span class="dv">${c.razaHato||'—'}</span></div>
+    <div class="dr"><span class="dl">Hectáreas</span><span class="dv">${c.hectareas||'—'}</span></div>
+    <div class="dr"><span class="dl">Última Visita</span><span class="dv">${c.ultimaVisita||'—'}</span></div>
+    <div class="dr"><span class="dl">Próxima Visita</span><span class="dv" style="color:var(--amber)">${c.proximaVisita||'Sin programar'}</span></div>
+    <div class="dr"><span class="dl">Gestión</span><span class="dv">${c.gestion||'—'}</span></div>
+    ${c.obs?`<div style="margin-top:10px;padding:9px;background:var(--bg3);border-radius:6px;font-size:.77rem;color:var(--muted);">${c.obs}</div>`:''}
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button class="btn bp bsm" onclick="openVentaParaCliente(${c.id})">💰 Registrar Venta</button>
+      <button class="btn ba bsm" onclick="openVisitaParaCliente(${c.id})">📅 Programar Visita</button>
+    </div>`;
+
+  // Mini mapa
+  $('cli-gps-txt').textContent=c.lat&&c.lng?`GPS: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`:'Sin coordenadas GPS registradas';
+  if(c.lat&&c.lng){
+    setTimeout(()=>{
+      const el=$('mini-map');el.innerHTML='';
+      const mm=L.map(el).setView([c.lat,c.lng],13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mm);
+      L.marker([c.lat,c.lng]).addTo(mm).bindPopup(`<b>${c.nombre}</b><br>${c.predio||''}`).openPopup();
+    },80);
+  } else {$('mini-map').innerHTML='<div style="height:185px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.79rem;background:var(--bg3);border-radius:8px;">📍 Sin GPS — Edita el cliente para agregar ubicación</div>';}
+
+  // Historial compras
+  const hist=db.ventas.filter(v=>v.clienteId==id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  $('cli-hist').innerHTML=hist.length?hist.map(v=>{
+    const t=db.toros.find(x=>x.id==v.toroId);
+    const pl=v.precioLista||v.precio||0,pv=v.precioVenta||v.precio||0;
+    const d=pct(pv,pl);
+    return `<tr>
+      <td>${v.fecha}</td><td>${t?t.nombre:'—'}</td><td>${t?t.raza:'—'}</td>
+      <td><span class="bdg bg-x">${t?t.tipo:'—'}</span></td>
+      <td>${v.dosis}</td><td>${money(pl)}</td><td>${money(pv)}</td>
+      <td><span style="color:${d>0?'var(--amber)':'var(--green)'}">${d>0?'-'+d+'%':'Sin desc.'}</span></td>
+      <td><b>${money(v.total)}</b></td><td><span class="bdg bg-b">${v.remision||'—'}</span></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:16px;">Sin compras registradas</td></tr>';
+
+  // Stats historial
+  const totalDosis=hist.reduce((a,v)=>a+v.dosis,0);
+  const totalCompras=hist.reduce((a,v)=>a+v.total,0);
+  const torosFavs=[...new Set(hist.map(v=>v.toroId))].length;
+  $('cli-hist-stats').innerHTML=totalDosis?`
+    <div>🛒 <b>${hist.length}</b> compras</div>
+    <div>💉 <b>${totalDosis}</b> dosis en total</div>
+    <div>💰 <b>${money(totalCompras)}</b> total invertido</div>
+    <div>🐂 <b>${torosFavs}</b> toros distintos</div>
+  `:'';
+}
+
+function openVentaParaCliente(id){
+  openM('mo-venta');
+  setTimeout(()=>{$('ve-cli').value=id;onVeCliChange();},50);
+}
+function openVisitaParaCliente(id){
+  openM('mo-visita');
+  setTimeout(()=>{$('vi-cli').value=id;$('vi-fecha').value=todayStr();},50);
+}
+
+function renderVisitas(){
+  const now=new Date(),tb=$('vis-tbody'),al=$('vis-alert');
+  tb.innerHTML='';al.innerHTML='';
+  db.visitas.sort((a,b)=>a.fecha.localeCompare(b.fecha)).forEach(v=>{
+    const c=db.clientes.find(x=>x.id==v.clienteId);
+    const diff=Math.ceil((new Date(v.fecha)-now)/86400000);
+    let badge=v.estado==='realizada'?'<span class="bdg bg-g">Realizada</span>':
+      v.estado==='cancelada'?'<span class="bdg bg-r">Cancelada</span>':
+      diff<0?'<span class="bdg bg-r">Atrasada</span>':'<span class="bdg bg-a">Programada</span>';
+    tb.innerHTML+=`<tr><td>${c?c.nombre:'—'}</td><td>${v.fecha}</td><td>${v.tipo}</td><td>${badge}</td><td>${v.proximaVisita||'—'}</td></tr>`;
+  });
+  db.clientes.filter(c=>c.proximaVisita).sort((a,b)=>a.proximaVisita.localeCompare(b.proximaVisita)).slice(0,10).forEach(c=>{
+    const diff=Math.ceil((new Date(c.proximaVisita)-now)/86400000);
+    const col=diff<0?'var(--red)':diff<=5?'var(--amber)':'var(--green)';
+    const lbl=diff<0?`⚠️ Atrasada ${Math.abs(diff)}d`:diff===0?'Hoy':`📅 En ${diff} días`;
+    al.innerHTML+=`<div class="tli"><div class="tld" style="background:${col}"></div><div><div class="tln">${c.nombre}</div><div class="tls">${c.zona||'—'} · ${c.proximaVisita} · ${lbl}</div></div></div>`;
+  });
+  if(!al.innerHTML)al.innerHTML='<div style="color:var(--muted);font-size:.79rem;padding:8px 0;">✅ No hay alertas pendientes.</div>';
+}
+
+function renderToros(){
+  const q=($('tq').value||'').toLowerCase();
+  const rf=$('t-raza-f').value,tf=$('t-tipo-f').value;
+  // Poblar filtro razas
+  const razas=[...new Set(db.toros.map(t=>t.raza).filter(Boolean))].sort();
+  $('t-raza-f').innerHTML='<option value="">Todas las razas</option>';
+  razas.forEach(r=>$('t-raza-f').innerHTML+=`<option${r===rf?' selected':''}>${r}</option>`);
+
+  const filtered=db.toros.filter(t=>{
+    if(rf&&t.raza!==rf)return false;
+    if(tf&&t.tipo!==tf)return false;
+    if(q&&!t.nombre.toLowerCase().includes(q)&&!t.codigo.toLowerCase().includes(q)&&!t.raza.toLowerCase().includes(q))return false;
+    return true;
+  }).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+
+  const grid=$('toro-grid');grid.innerHTML='';
+  $('toro-empty').style.display=filtered.length?'none':'block';
+  filtered.forEach(t=>{
+    const sc=stkColor(t.stock,t.minimo);
+    const pct2=Math.min(100,(t.stock/Math.max(t.stock,t.minimo*4))*100);
+    const cls=t.stock<=0?'out':t.stock<=t.minimo?'low':'';
+    grid.innerHTML+=`<div class="bc ${cls}" onclick="verToro(${t.id})">
+      ${t.pdf?'<div class="bc-pdf">📄 PDF</div>':''}
+      <div class="bc-badge">${stkBadge(t.stock,t.minimo)}</div>
+      <div class="bi">${t.foto?`<img src="${t.foto}">`:'🐂'}</div>
+      <div class="binfo">
+        <div class="bname">${t.nombre}</div>
+        <div class="bcode">${t.codigo} · ${t.proveedor||''}</div>
+        <span class="bdg bg-b" style="font-size:.64rem;">${t.raza}</span>
+        ${t.tipo!=='Convencional'?`<span class="bdg bg-p" style="font-size:.64rem;margin-left:3px;">${t.tipo}</span>`:''}
+        <div class="bprice">${money(t.precio)}<span style="font-size:.68rem;color:var(--muted);font-family:'DM Sans';font-weight:400;"> / dosis</span></div>
+        <div class="bstk">
+          <div class="bsr"><span>Stock</span><b style="color:${sc}">${t.stock} dosis</b></div>
+          <div class="pb"><div class="pf" style="width:${pct2}%;background:${sc}"></div></div>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+function filterToros(){renderToros();}
+
+function renderInv(filter='all'){
+  const ms=moStart();
+  const bajo=db.toros.filter(t=>t.stock>0&&t.stock<=t.minimo).length;
+  const cero=db.toros.filter(t=>t.stock<=0).length;
+  $('inv-tot').textContent=db.toros.length;
+  $('inv-dosis').textContent=db.toros.reduce((a,t)=>a+t.stock,0).toLocaleString('es-CO');
+  $('inv-bajo').textContent=bajo;$('inv-cero').textContent=cero;
+
+  let alertHTML='';
+  if(cero>0)alertHTML+=`<div style="background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:9px 13px;font-size:.78rem;margin-bottom:10px;display:flex;gap:9px;align-items:center;">⛔ <b>${cero}</b> toros agotados — requieren reposición urgente</div>`;
+  if(bajo>0)alertHTML+=`<div style="background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);border-radius:8px;padding:9px 13px;font-size:.78rem;margin-bottom:10px;display:flex;gap:9px;align-items:center;">⚠️ <b>${bajo}</b> toros con stock bajo — revisar pedido</div>`;
+  $('inv-alerts').innerHTML=alertHTML;
+
+  const filtered=db.toros.filter(t=>{
+    if(filter==='low')return t.stock>0&&t.stock<=t.minimo;
+    if(filter==='out')return t.stock<=0;
+    return true;
+  }).sort((a,b)=>a.stock-b.stock);
+
+  const tb=$('inv-tbody');tb.innerHTML='';
+  filtered.forEach(t=>{
+    const sc=stkColor(t.stock,t.minimo);
+    const vendMes=db.ventas.filter(v=>v.toroId==t.id&&v.fecha>=ms).reduce((a,v)=>a+v.dosis,0);
+    tb.innerHTML+=`<tr>
+      <td><b>${t.nombre}</b></td><td>${t.codigo}</td>
+      <td><span class="bdg bg-b">${t.raza}</span></td>
+      <td><span class="bdg bg-x">${t.tipo}</span></td>
+      <td>${money(t.precio)}</td>
+      <td><b style="color:${sc}">${t.stock}</b></td>
+      <td>${t.minimo}</td><td>${vendMes}</td>
+      <td>${stkBadge(t.stock,t.minimo)}</td>
+      <td>
+        <button class="btn bb bsm" onclick="openEntradaParaToro(${t.id})" title="Entrada de stock">➕</button>
+        <button class="btn bg bsm" onclick="verToro(${t.id})" title="Ver detalle">👁</button>
+      </td>
+    </tr>`;
+  });
+  // Badge sidebar
+  $('inv-badge').style.display=(bajo+cero)>0?'flex':'none';
+  $('inv-badge').textContent=bajo+cero;
+}
+
+function openEntradaParaToro(id){
+  openM('mo-entrada');
+  setTimeout(()=>{$('ent-toro').value=id;},50);
+}
+
+function checkAlerts(){renderInv();}
+
+function renderVentas(){
+  const t=todayStr(),ws=wkStart(),ms=moStart(),ys=yrStart();
+  const vH=db.ventas.filter(v=>v.fecha===t),vS=db.ventas.filter(v=>v.fecha>=ws);
+  const vM=db.ventas.filter(v=>v.fecha>=ms),vA=db.ventas.filter(v=>v.fecha>=ys);
+  const sum=(arr,k)=>arr.reduce((a,v)=>a+(v[k]||0),0);
+  $('v-hoy').textContent=sum(vH,'dosis');$('v-hoy-m').textContent=money(sum(vH,'total'));
+  $('v-sem').textContent=sum(vS,'dosis');$('v-sem-m').textContent=money(sum(vS,'total'));
+  $('v-mes').textContent=sum(vM,'dosis');$('v-mes-m').textContent=money(sum(vM,'total'));
+  $('v-anio').textContent=sum(vA,'dosis');$('v-anio-m').textContent=money(sum(vA,'total'));
+
+  const desde=$('v-desde').value,hasta=$('v-hasta').value;
+  let ventas=[...db.ventas].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  if(desde)ventas=ventas.filter(v=>v.fecha>=desde);
+  if(hasta)ventas=ventas.filter(v=>v.fecha<=hasta);
+
+  const tb=$('v-tbody');tb.innerHTML='';
+  ventas.forEach(v=>{
+    const c=db.clientes.find(x=>x.id==v.clienteId),tr=db.toros.find(x=>x.id==v.toroId);
+    const pl=v.precioLista||v.precio||0,pv=v.precioVenta||v.precio||0;
+    const d=pct(pv,pl);
+    tb.innerHTML+=`<tr>
+      <td>${v.fecha}</td>
+      <td><b style="cursor:pointer;color:var(--blue);" onclick="verCliente(${v.clienteId})">${c?c.nombre:'—'}</b></td>
+      <td>${c?c.zona:'—'}</td>
+      <td><b style="cursor:pointer;" onclick="verToro(${v.toroId})">${tr?tr.nombre:'—'}</b></td>
+      <td>${tr?tr.raza:'—'}</td>
+      <td><span class="bdg bg-x">${tr?tr.tipo:'—'}</span></td>
+      <td>${v.dosis}</td>
+      <td>${money(pl)}</td>
+      <td>${money(pv)}</td>
+      <td><span style="color:${d>0?'var(--amber)':'var(--green)'}">${d>0?'-'+d+'%':'—'}</span></td>
+      <td><b>${money(v.total)}</b></td>
+      <td><span class="bdg bg-b">${v.remision||'—'}</span></td>
+      <td>${v.foto?`<button class="btn bg bsm" onclick="window.open('${v.foto}')">📄</button>`:'—'}</td>
+    </tr>`;
+  });
+  if(!ventas.length)tb.innerHTML='<tr><td colspan="13" style="color:var(--muted);text-align:center;padding:20px;">Sin ventas en este período.</td></tr>';
+}
+
+function renderRemisiones(){
+  const g=$('rem-grid');
+  const withFoto=db.ventas.filter(v=>v.foto);
+  if(!withFoto.length){g.innerHTML='<div style="color:var(--muted);font-size:.8rem;grid-column:1/-1;">Las fotos de remisiones adjuntadas en ventas aparecerán aquí.</div>';return;}
+  g.innerHTML='';
+  withFoto.forEach(v=>{
+    const c=db.clientes.find(x=>x.id==v.clienteId);
+    g.innerHTML+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+      <img src="${v.foto}" style="width:100%;height:110px;object-fit:cover;cursor:pointer;" onclick="window.open('${v.foto}')">
+      <div style="padding:9px;font-size:.73rem;">
+        <div style="font-weight:600;">${v.remision||'Sin código'}</div>
+        <div style="color:var(--muted);">${c?c.nombre:'—'} · ${v.fecha}</div>
+        <div style="color:var(--green);">${money(v.total)}</div>
+      </div>
+    </div>`;
+  });
+}
+
+function renderGastos(){
+  const ws=wkStart(),ms=moStart();
+  const gS=db.gastos.filter(g=>g.fecha>=ws),gM=db.gastos.filter(g=>g.fecha>=ms);
+  $('g-sem').textContent=money(sumF(gS,'total'));$('g-sem-k').textContent=sumF(gS,'kmRec')+' km';
+  $('g-mes').textContent=money(sumF(gM,'total'));$('g-mes-k').textContent=sumF(gM,'kmRec')+' km';
+  $('g-km').textContent=sumF(gM,'kmRec').toLocaleString('es-CO');
+  const ventMes=db.ventas.filter(v=>v.fecha>=ms).reduce((a,v)=>a+v.total,0);
+  const gastoMes=sumF(gM,'total');
+  const rent=ventMes>0?Math.round(((ventMes-gastoMes)/ventMes)*100):0;
+  const rentEl=$('g-rent');rentEl.textContent=rent+'%';
+  rentEl.style.color=rent>=70?'var(--green)':rent>=40?'var(--amber)':'var(--red)';
+
+  const tb=$('g-tbody');tb.innerHTML='';
+  [...db.gastos].sort((a,b)=>b.fecha.localeCompare(a.fecha)).forEach(g=>{
+    tb.innerHTML+=`<tr>
+      <td>${g.fecha}</td><td><span class="bdg bg-x">${g.ruta||'—'}</span></td>
+      <td>${g.kmRec||0} km</td><td>${money(g.peajes||0)}</td>
+      <td>${money(g.combustible||0)}</td><td>${money(g.viaticos||0)}</td>
+      <td>${money(g.hotel||0)}</td><td><b style="color:var(--red)">${money(g.total||0)}</b></td>
+    </tr>`;
+  });
+  if(!db.gastos.length)tb.innerHTML='<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px;">Sin gastos registrados.</td></tr>';
+
+  const svl=[],svd=[],sgd=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i*7);
+    const w0=new Date(d);w0.setDate(d.getDate()-d.getDay());
+    const w1=new Date(w0);w1.setDate(w0.getDate()+6);
+    const ws2=w0.toISOString().split('T')[0],we=w1.toISOString().split('T')[0];
+    svl.push('S'+(6-i));
+    svd.push(db.ventas.filter(v=>v.fecha>=ws2&&v.fecha<=we).reduce((a,v)=>a+v.total,0));
+    sgd.push(db.gastos.filter(g=>g.fecha>=ws2&&g.fecha<=we).reduce((a,g)=>a+(g.total||0),0));
+  }
+  const ctx=$('ch-gvg').getContext('2d');if(chGvg)chGvg.destroy();
+  chGvg=new Chart(ctx,{type:'bar',data:{labels:svl,datasets:[{label:'Ventas',data:svd,backgroundColor:'rgba(63,185,80,.7)',borderRadius:4},{label:'Gastos',data:sgd,backgroundColor:'rgba(248,81,73,.7)',borderRadius:4}]},options:{plugins:{legend:{labels:{color:'#e6edf3',font:{size:11}}}},scales:{x:{grid:{color:'#30363d'},ticks:{color:'#7d8590'}},y:{grid:{color:'#30363d'},ticks:{color:'#7d8590',callback:v=>'$'+(v/1000).toFixed(0)+'K'}}},responsive:true,maintainAspectRatio:false}});
+}
+
+function renderReportes(){
+  const labels30=[],data30=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const ds=d.toISOString().split('T')[0];
+    labels30.push(i%5===0?ds.slice(5):'');
+    data30.push(db.ventas.filter(v=>v.fecha===ds).reduce((a,v)=>a+v.dosis,0));
+  }
+  const ctx1=$('ch-dia').getContext('2d');if(chDia)chDia.destroy();
+  chDia=new Chart(ctx1,{type:'line',data:{labels:labels30,datasets:[{data:data30,borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,.08)',fill:true,tension:.4,pointRadius:2}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'#30363d'},ticks:{color:'#7d8590'}},y:{grid:{color:'#30363d'},ticks:{color:'#7d8590'}}},responsive:true,maintainAspectRatio:false}});
+
+  const ml=[],md2=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);d.setDate(1);
+    const ms=d.toISOString().split('T')[0];
+    const me=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];
+    ml.push(d.toLocaleString('es',{month:'short'}));
+    md2.push(db.ventas.filter(v=>v.fecha>=ms&&v.fecha<=me).reduce((a,v)=>a+v.total,0));
+  }
+  const ctx2=$('ch-men').getContext('2d');if(chMen)chMen.destroy();
+  chMen=new Chart(ctx2,{type:'bar',data:{labels:ml,datasets:[{data:md2,backgroundColor:'rgba(88,166,255,.7)',borderRadius:5}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'#30363d'},ticks:{color:'#7d8590'}},y:{grid:{color:'#30363d'},ticks:{color:'#7d8590',callback:v=>'$'+(v/1000000).toFixed(1)+'M'}}},responsive:true,maintainAspectRatio:false}});
+
+  // Top toros
+  const toroMap={};
+  db.ventas.forEach(v=>{if(!toroMap[v.toroId])toroMap[v.toroId]={d:0,t:0};toroMap[v.toroId].d+=v.dosis;toroMap[v.toroId].t+=v.total;});
+  const topT=Object.entries(toroMap).sort((a,b)=>b[1].d-a[1].d).slice(0,8);
+  const maxTD=topT[0]?topT[0][1].d:1;
+  $('rep-toros').innerHTML=topT.map(([id,d])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:3px;">
+        <span>${toroNom(parseInt(id))}</span><b>${d.d} dosis</b>
+      </div>
+      <div class="pb"><div class="pf" style="width:${Math.round((d.d/maxTD)*100)}%;background:var(--green)"></div></div>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:.79rem;">Sin datos</div>';
+
+  // Top clientes
+  const cliMap={};
+  db.ventas.forEach(v=>{if(!cliMap[v.clienteId])cliMap[v.clienteId]={d:0,t:0};cliMap[v.clienteId].d+=v.dosis;cliMap[v.clienteId].t+=v.total;});
+  const topC=Object.entries(cliMap).sort((a,b)=>b[1].d-a[1].d).slice(0,8);
+  const maxCD=topC[0]?topC[0][1].d:1;
+  $('rep-cli').innerHTML=topC.map(([id,d])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.79rem;margin-bottom:3px;">
+        <span>${cliNom(parseInt(id))}</span><b>${d.d} dosis</b>
+      </div>
+      <div class="pb"><div class="pf" style="width:${Math.round((d.d/maxCD)*100)}%;background:var(--blue)"></div></div>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:.79rem;">Sin datos</div>';
+
+  // Resumen
+  const totDosis=db.ventas.reduce((a,v)=>a+v.dosis,0);
+  const totMoney=db.ventas.reduce((a,v)=>a+v.total,0);
+  const totGastos=db.gastos.reduce((a,g)=>a+(g.total||0),0);
+  $('rep-res').innerHTML=`
+    <div class="dr"><span class="dl">Total clientes</span><b class="dv">${db.clientes.length}</b></div>
+    <div class="dr"><span class="dl">Toros en catálogo</span><b class="dv">${db.toros.length}</b></div>
+    <div class="dr"><span class="dl">Total ventas</span><b class="dv">${db.ventas.length}</b></div>
+    <div class="dr"><span class="dl">Total dosis vendidas</span><b class="dv" style="color:var(--green)">${totDosis.toLocaleString('es-CO')}</b></div>
+    <div class="dr"><span class="dl">Ingresos totales</span><b class="dv" style="color:var(--amber)">${money(totMoney)}</b></div>
+    <div class="dr"><span class="dl">Gastos totales</span><b class="dv" style="color:var(--red)">${money(totGastos)}</b></div>
+    <div class="dr"><span class="dl">Margen neto</span><b class="dv" style="color:var(--green)">${money(totMoney-totGastos)}</b></div>
+    <div class="dr"><span class="dl">Precio promedio dosis</span><b class="dv">${totDosis?money(totMoney/totDosis):'—'}</b></div>
+  `;
+}
+
+// ════════ GLOBAL SEARCH ════════
+function globalSearch(q){
+  if(!q){return;}
+  q=q.toLowerCase();
+  const cli=db.clientes.find(c=>c.nombre.toLowerCase().includes(q)||(c.predio||'').toLowerCase().includes(q));
+  const toro=db.toros.find(t=>t.nombre.toLowerCase().includes(q)||t.codigo.toLowerCase().includes(q));
+  if(cli){verCliente(cli.id);}
+  else if(toro){go('toros');setTimeout(()=>verToro(toro.id),300);}
+}
+
+// ════════ INIT ════════
+function init(){
+  loadDB();seed();
+  $('topbar-date').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderDash();
+  checkAlerts();
+}
+init();
+</script>
+</body>
+</html>
